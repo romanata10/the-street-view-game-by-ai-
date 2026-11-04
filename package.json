@@ -1,0 +1,52 @@
+{
+  "name": "geosvoi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Мультиплеерная географическая игра с Google Street View, комнатами друзей и гаджетами",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romanata10/the-street-view-game-by-ai-.git"
+  },
+  "bugs": {
+    "url": "https://github.com/romanata10/the-street-view-game-by-ai-/issues"
+  },
+  "scripts": {
+    "dev": "tsx server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "start": "cross-env NODE_ENV=production tsx server/index.ts",
+    "preview": "cross-env NODE_ENV=production tsx server/index.ts",
+    "test:content": "tsx scripts/validate-content.ts"
+  },
+  "dependencies": {
+    "@fontsource/manrope": "^5.1.1",
+    "@fontsource/unbounded": "^5.1.1",
+    "cross-env": "^7.0.3",
+    "express": "^4.21.2",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.174.0",
+    "topojson-client": "^3.1.0",
+    "tsx": "^4.19.2",
+    "world-atlas": "^2.0.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/leaflet": "^1.9.15",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.174.0",
+    "@types/topojson-client": "^3.1.5",
+    "@types/ws": "^8.5.14",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0"
+  }
+}
