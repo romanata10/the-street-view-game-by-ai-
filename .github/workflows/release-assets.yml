@@ -1,0 +1,55 @@
+name: Release assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub Release tag (for example, v1.0.0)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate and build
+        run: |
+          npm run test:content
+          npm run build
+      - name: Package production bundle
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          VERSION="${TAG#v}"
+          ARCHIVE="geosvoi-${VERSION}-production.tar.gz"
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+          tar -czf "$ARCHIVE" \
+            --transform="s,^,geosvoi-${VERSION}/," \
+            dist server shared package.json package-lock.json .env.example \
+            README.md CHANGELOG.md THIRD_PARTY_NOTICES.md docs
+          sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+      - name: Upload production archive
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: gh release upload "$TAG" "$ARCHIVE" --clobber
+      - name: Upload SHA-256
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: gh release upload "$TAG" "$ARCHIVE.sha256" --clobber
