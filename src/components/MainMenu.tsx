@@ -11,6 +11,8 @@ import type { GameConnection } from '../hooks/useGameConnection';
 import ShopModal from './ShopModal';
 import { CoinBalance, Logo, Modal } from './UI';
 
+const GOOGLE_MAPS_CONNECTED = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+
 const DEFAULT_SETTINGS: GameSettings = {
   cityIds: ['novosibirsk'], battleMode: 'classic', panoramaMode: 'mixed', rounds: 5, timeLimit: 120,
 };
@@ -135,7 +137,8 @@ export default function MainMenu({ game }: { game: GameConnection }) {
                   <button key={mode} className={settings.panoramaMode === mode ? 'selected' : ''} onClick={() => setSettings({ ...settings, panoramaMode: mode })}><Icon size={16} /><span>{label}</span></button>
                 ))}
               </div>
-              <p className="setting-hint">Street View — движение по улицам, панорамы — только выбранные точки.</p>
+              <p className="setting-hint">Google Street View — движение по улицам; точки — фиксированная панорама без переходов.</p>
+              <div className={`maps-api-status ${GOOGLE_MAPS_CONNECTED ? 'connected' : ''}`}><KeyRound size={11} /><span>{GOOGLE_MAPS_CONNECTED ? 'Google Maps API подключён: улицы и точки' : 'Сейчас демо-сцены · для Google добавьте VITE_GOOGLE_MAPS_API_KEY в .env'}</span></div>
             </div>
 
             <div className="builder-section compact-settings">

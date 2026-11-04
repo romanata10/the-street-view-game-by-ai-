@@ -444,6 +444,7 @@ wss.on('connection', (rawSocket: Socket) => {
           player.view = {
             heading: ((Number(message.view.heading) % 360) + 360) % 360,
             pitch: clamp(Number(message.view.pitch) || 0, -80, 80),
+            panoId: typeof message.view.panoId === 'string' ? message.view.panoId.slice(0, 180) : null,
           };
           broadcast(room);
           break;

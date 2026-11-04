@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Compass, Mouse, Move, Navigation, Pause, Play, ZoomIn } from 'lucide-react';
+import { CloudOff, Compass, Mouse, Move, Navigation, Pause, Play, ZoomIn } from 'lucide-react';
 import type { PublicLocation, PublicPlayer, PlayerView } from '../../shared/types';
 
 declare global {
@@ -19,15 +19,28 @@ interface ViewerProps {
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
 function loadGoogleMaps() {
+  if (!GOOGLE_KEY) return Promise.reject(new Error('Не задан VITE_GOOGLE_MAPS_API_KEY'));
   if (window.google?.maps?.StreetViewPanorama) return Promise.resolve();
   if (window.__geosvoiGoogleLoader) return window.__geosvoiGoogleLoader;
   window.__geosvoiGoogleLoader = new Promise<void>((resolve, reject) => {
     const callback = `__geosvoiMaps${Date.now()}`;
-    (window as any)[callback] = () => { resolve(); delete (window as any)[callback]; };
+    const timeout = setTimeout(() => {
+      window.__geosvoiGoogleLoader = undefined;
+      reject(new Error('Google Maps API не отвечает. Проверьте ключ и доступ к maps.googleapis.com.'));
+    }, 15_000);
+    (window as any)[callback] = () => {
+      clearTimeout(timeout);
+      resolve();
+      delete (window as any)[callback];
+    };
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_KEY}&callback=${callback}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_KEY)}&callback=${callback}&language=ru&v=weekly`;
     script.async = true;
-    script.onerror = () => reject(new Error('Maps API is unavailable'));
+    script.onerror = () => {
+      clearTimeout(timeout);
+      window.__geosvoiGoogleLoader = undefined;
+      reject(new Error('Не удалось загрузить Google Maps API. Проверьте ключ и сетевые ограничения.'));
+    };
     document.head.appendChild(script);
   });
   return window.__geosvoiGoogleLoader;
@@ -38,61 +51,102 @@ function GoogleStreetView({ location, speedActive, onView, onLocalView, onError 
   speedActive: boolean;
   onView: (view: PlayerView) => void;
   onLocalView: (view: PlayerView) => void;
-  onError: () => void;
+  onError: (message: string) => void;
 }) {
   const elementRef = useRef<HTMLDivElement>(null);
   const panoramaRef = useRef<any>(null);
   const speedRef = useRef(speedActive);
   speedRef.current = speedActive;
   const lastSent = useRef(0);
+  const [loading, setLoading] = useState(true);
   const callbacks = useRef({ onView, onLocalView, onError });
   callbacks.current = { onView, onLocalView, onError };
 
   useEffect(() => {
     let alive = true;
+    let panoramaTimeout: ReturnType<typeof setTimeout> | undefined;
+    setLoading(true);
+    const fail = (message: string) => {
+      if (!alive) return;
+      setLoading(false);
+      callbacks.current.onError(message);
+    };
     loadGoogleMaps().then(() => {
       if (!alive || !elementRef.current || !window.google) return;
-      const panorama = new window.google.maps.StreetViewPanorama(elementRef.current, {
-        position: { lat: location.lat, lng: location.lng },
-        pov: { heading: location.heading, pitch: 0 },
-        zoom: 0,
-        addressControl: false,
-        showRoadLabels: false,
-        fullscreenControl: false,
-        motionTracking: false,
-        clickToGo: true,
-        linksControl: true,
-        panControl: false,
-        enableCloseButton: false,
-      });
-      panoramaRef.current = panorama;
-      const publish = () => {
-        const pov = panorama.getPov();
-        const view = { heading: ((pov.heading % 360) + 360) % 360, pitch: pov.pitch || 0 };
-        callbacks.current.onLocalView(view);
-        if (Date.now() - lastSent.current > 130) {
-          callbacks.current.onView(view);
-          lastSent.current = Date.now();
+      const maps = window.google.maps;
+      const service = new maps.StreetViewService();
+      panoramaTimeout = setTimeout(() => fail('Google Street View не ответил вовремя. Показываем резервную сцену.'), 12_000);
+      service.getPanorama({
+        location: { lat: location.lat, lng: location.lng },
+        radius: 250,
+        preference: maps.StreetViewPreference.NEAREST,
+        source: maps.StreetViewSource.OUTDOOR,
+      }, (data: any, status: string) => {
+        if (panoramaTimeout) clearTimeout(panoramaTimeout);
+        if (!alive || !elementRef.current) return;
+        if (status !== maps.StreetViewStatus.OK || !data?.location?.pano) {
+          fail('Для этой точки Google не нашёл панораму в радиусе 250 м. Показываем резервную сцену.');
+          return;
         }
-      };
-      panorama.addListener('pov_changed', publish);
-      panorama.addListener('position_changed', publish);
-      const nudge = (event: Event) => {
-        const pov = panorama.getPov();
-        panorama.setPov({ heading: pov.heading + (event as CustomEvent<number>).detail * (speedRef.current ? 1.6 : 1), pitch: pov.pitch });
-      };
-      window.addEventListener('geosvoi-nudge', nudge);
-      (panorama as any).__geosvoiNudge = nudge;
-      publish();
-    }).catch(() => alive && callbacks.current.onError());
+        const canNavigate = location.provider === 'street';
+        const panorama = new maps.StreetViewPanorama(elementRef.current, {
+          pano: data.location.pano,
+          pov: { heading: location.heading, pitch: 0 },
+          zoom: 0,
+          addressControl: false,
+          showRoadLabels: false,
+          fullscreenControl: false,
+          motionTracking: false,
+          clickToGo: canNavigate,
+          linksControl: canNavigate,
+          scrollwheel: true,
+          panControl: false,
+          enableCloseButton: false,
+        });
+        panoramaRef.current = panorama;
+        const publish = () => {
+          const pov = panorama.getPov();
+          const view: PlayerView = {
+            heading: ((pov.heading % 360) + 360) % 360,
+            pitch: pov.pitch || 0,
+            panoId: panorama.getPano(),
+          };
+          callbacks.current.onLocalView(view);
+          if (Date.now() - lastSent.current > 130) {
+            callbacks.current.onView(view);
+            lastSent.current = Date.now();
+          }
+        };
+        panorama.addListener('pov_changed', publish);
+        panorama.addListener('position_changed', publish);
+        panorama.addListener('pano_changed', publish);
+        const nudge = (event: Event) => {
+          const pov = panorama.getPov();
+          panorama.setPov({ heading: pov.heading + (event as CustomEvent<number>).detail * (speedRef.current ? 1.6 : 1), pitch: pov.pitch });
+        };
+        window.addEventListener('geosvoi-nudge', nudge);
+        panorama.__geosvoiNudge = nudge;
+        setLoading(false);
+        publish();
+      });
+    }).catch((caught: Error) => fail(caught.message));
     return () => {
       alive = false;
-      if (panoramaRef.current?.__geosvoiNudge) window.removeEventListener('geosvoi-nudge', panoramaRef.current.__geosvoiNudge);
+      if (panoramaTimeout) clearTimeout(panoramaTimeout);
+      const panorama = panoramaRef.current;
+      if (panorama?.__geosvoiNudge) window.removeEventListener('geosvoi-nudge', panorama.__geosvoiNudge);
+      if (panorama && window.google?.maps?.event) window.google.maps.event.clearInstanceListeners(panorama);
       panoramaRef.current = null;
+      elementRef.current?.replaceChildren();
     };
-  }, [location.lat, location.lng, location.heading]);
+  }, [location.lat, location.lng, location.heading, location.provider]);
 
-  return <div className="google-street-view" ref={elementRef} />;
+  return (
+    <div className="google-street-view">
+      <div className="google-panorama-mount" ref={elementRef} />
+      {loading && <div className="google-map-loading"><span className="spinner" /><b>Загружаем Google Street View…</b><small>Ищем ближайшую реальную панораму</small></div>}
+    </div>
+  );
 }
 
 function ThreePanorama({ location, optics, speedActive, onView, onLocalView }: {
@@ -264,16 +318,22 @@ function ThreePanorama({ location, optics, speedActive, onView, onLocalView }: {
 export default function PanoramaViewer({ location, players, selfId, optics, speedActive, onView }: ViewerProps) {
   const [localView, setLocalView] = useState<PlayerView>({ heading: location.heading, pitch: 0 });
   const [googleFailed, setGoogleFailed] = useState(false);
+  const [fallbackReason, setFallbackReason] = useState<string | null>(null);
   const [autoRotate, setAutoRotate] = useState(false);
-  const useGoogle = location.provider === 'street' && Boolean(GOOGLE_KEY) && !googleFailed;
+  const useGoogle = Boolean(GOOGLE_KEY) && !googleFailed;
 
   useEffect(() => {
     setLocalView({ heading: location.heading, pitch: 0 });
     setGoogleFailed(false);
+    setFallbackReason(null);
     setAutoRotate(false);
-  }, [location.image, location.heading]);
+  }, [location.id, location.heading, location.provider]);
 
-  const friends = players.filter((player) => player.id !== selfId && (player.connected || player.isBot));
+  const friends = players.filter((player) => {
+    if (player.id === selfId || (!player.connected && !player.isBot)) return false;
+    if (!useGoogle || player.isBot) return true;
+    return Boolean(player.view.panoId && localView.panoId && player.view.panoId === localView.panoId);
+  });
   const visibleFriends = friends.map((player) => {
     const delta = ((player.view.heading - localView.heading + 540) % 360) - 180;
     return { player, delta };
@@ -293,11 +353,12 @@ export default function PanoramaViewer({ location, players, selfId, optics, spee
   return (
     <div className="panorama-viewer">
       {useGoogle ? (
-        <GoogleStreetView location={location} speedActive={speedActive} onView={onView} onLocalView={setLocalView} onError={() => setGoogleFailed(true)} />
+        <GoogleStreetView location={location} speedActive={speedActive} onView={onView} onLocalView={setLocalView} onError={(message) => { setFallbackReason(message); setGoogleFailed(true); }} />
       ) : (
         <ThreePanorama key={`${location.image}-${location.heading}`} location={location} optics={optics} speedActive={speedActive} onView={onView} onLocalView={setLocalView} />
       )}
       <div className="panorama-vignette" />
+      {fallbackReason && <div className="google-fallback-notice"><CloudOff size={15} /><span>{fallbackReason}</span></div>}
       <div className="panorama-friends" aria-label="Друзья в панораме">
         {visibleFriends.map(({ player, delta }) => (
           <div
@@ -317,7 +378,7 @@ export default function PanoramaViewer({ location, players, selfId, optics, spee
         <button className="icon-button glass" onClick={() => nudge(35)} aria-label="Повернуть вправо"><Move size={16} /></button>
       </div>
       <div className="panorama-bottom-tools">
-        <span className="optics-label"><ZoomIn size={14} /> {optics ? 'Оптика PRO' : 'Обычный zoom'}</span>
+        <span className="optics-label"><ZoomIn size={14} /> {useGoogle ? `Google · ${location.provider === 'points' ? 'фиксированная точка' : 'Street View'}` : optics ? 'Оптика PRO' : 'Обычный zoom'}</span>
         <button className={`icon-button glass ${autoRotate ? 'active' : ''}`} onClick={() => setAutoRotate(!autoRotate)} title="Автообзор">
           {autoRotate ? <Pause size={16} /> : <Play size={16} />}
         </button>

@@ -6,6 +6,8 @@ export interface LatLng { lat: number; lng: number }
 export interface PlayerView {
   heading: number;
   pitch: number;
+  /** Google Street View panorama ID; used to show teammates only in the same scene. */
+  panoId?: string | null;
 }
 
 export interface PlayerEffects {

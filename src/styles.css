@@ -137,6 +137,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .segment-control button.selected { color: #eaf0e5; background: #2b362c; box-shadow: 0 2px 7px rgba(0,0,0,.25); }
 .segment-control button.selected svg { color: var(--lime); }
 .setting-hint { margin-top: 8px; color: #717d72; font-size: 8px; line-height: 1.5; }
+.maps-api-status { display: flex; align-items: flex-start; gap: 5px; margin-top: 8px; color: #9b875d; font-size: 7px; line-height: 1.45; }
+.maps-api-status svg { flex: 0 0 auto; margin-top: 1px; }
+.maps-api-status.connected { color: #91b674; }
 .compact-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .compact-settings label { display: flex; flex-direction: column; gap: 8px; }
 .compact-settings label > span { display: flex; align-items: center; gap: 6px; color: #9ba69b; font-size: 9px; font-weight: 700; }
@@ -375,6 +378,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .three-canvas-mount { position: absolute; inset: 0; }
 .three-panorama canvas { display: block; width: 100%; height: 100%; }
 .google-street-view > div { width: 100%; height: 100%; }
+.google-panorama-mount { position: absolute; inset: 0; }
+.google-map-loading { position: absolute; z-index: 2; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #dce5d8; background: #17221b; }
+.google-map-loading b { font-size: 12px; }
+.google-map-loading small { color: #7f8e80; font-size: 9px; }
+.google-fallback-notice { position: absolute; z-index: 18; left: 50%; bottom: 108px; transform: translateX(-50%); display: flex; align-items: center; gap: 7px; width: max-content; max-width: min(520px, calc(100% - 120px)); padding: 8px 10px; color: #f3d79e; background: rgba(49,39,22,.9); border: 1px solid rgba(255,198,92,.3); border-radius: 8px; backdrop-filter: blur(12px); font-size: 8px; line-height: 1.45; pointer-events: none; }
+.google-fallback-notice svg { flex: 0 0 auto; }
 .panorama-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 12px; color: #cad3c7; background: #1c271f; font-size: 12px; }
 .panorama-gesture-hint { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); display: flex; align-items: center; gap: 7px; padding: 7px 10px; color: rgba(255,255,255,.72); background: rgba(12,18,13,.45); border-radius: 7px; backdrop-filter: blur(8px); font-size: 8px; pointer-events: none; animation: hintFade 8s forwards; }
 .panorama-gesture-hint > span { opacity: .5; }
@@ -730,6 +739,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .game-player-chip > div, .game-player-chip > strong { display: none; }
   .game-player-chip .player-avatar > i { border-color: #1b241d; }
   .panorama-gesture-hint { display: none; }
+  .google-fallback-notice { left: 58px; right: 10px; bottom: 294px; transform: none; width: auto; max-width: none; }
   .gadget-rail { left: 9px; top: 85px; gap: 5px; padding: 5px; }
   .gadget-rail-title { display: none; }
   .gadget-button { width: 37px; height: 37px; }
