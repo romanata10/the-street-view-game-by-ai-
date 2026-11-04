@@ -7,6 +7,8 @@ on:
         description: Existing GitHub Release tag (for example, v1.0.0)
         required: true
         type: string
+  repository_dispatch:
+    types: [build-release-assets]
 
 permissions:
   contents: write
@@ -16,10 +18,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Validate release tag
+        env:
+          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "A semantic release tag is required (for example, v1.0.0)"
+            exit 1
+          fi
       - name: Checkout release tag
         uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.tag || github.event.client_payload.tag }}
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
@@ -33,7 +43,7 @@ jobs:
           npm run build
       - name: Package production bundle
         env:
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
         run: |
           VERSION="${TAG#v}"
           ARCHIVE="geosvoi-${VERSION}-production.tar.gz"
@@ -46,10 +56,10 @@ jobs:
       - name: Upload production archive
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
         run: gh release upload "$TAG" "$ARCHIVE" --clobber
       - name: Upload SHA-256
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
         run: gh release upload "$TAG" "$ARCHIVE.sha256" --clobber
