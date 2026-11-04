@@ -15,6 +15,17 @@ export interface City {
   hint: string;
 }
 
+export interface CityLocation {
+  id: string;
+  cityId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  image: string;
+  hint: string;
+  heading: number;
+}
+
 export interface GameSettings {
   cityIds: string[];
   battleMode: BattleMode;
@@ -79,6 +90,37 @@ export const CITIES: City[] = [
     accent: '#b9a8ff', tagline: 'Кафе, балконы и прогулки у Сены',
     hint: 'Железная дама наблюдает за этим местом. Ответь на берегу Сены.',
   },
+  {
+    id: 'saint-petersburg', name: 'Санкт-Петербург', country: 'Россия', flag: '🇷🇺',
+    image: '/panoramas/saint-petersburg-palace.jpg', center: [59.939, 30.3158], zoom: 12,
+    accent: '#74e0c1', tagline: 'Северная столица и гранитные набережные',
+    hint: 'Город стоит на Неве. Здесь белые ночи, разводные мосты и очень много гранита.',
+  },
+  {
+    id: 'istanbul', name: 'Стамбул', country: 'Турция', flag: '🇹🇷',
+    image: '/panoramas/istanbul-sultanahmet.jpg', center: [41.0054, 28.9768], zoom: 12,
+    accent: '#ffb374', tagline: 'Два континента, минареты и Босфор',
+    hint: 'Город встречает сразу два континента. Ищи Босфор, чаек и красные трамваи.',
+  },
+];
+
+export const LOCATIONS: CityLocation[] = [
+  { id: 'novosibirsk-opera', cityId: 'novosibirsk', name: 'Площадь Ленина · театр оперы и балета', lat: 55.0302, lng: 82.9203, image: '/panoramas/novosibirsk-center.jpg', heading: 0, hint: 'Город стоит на Оби. В кадре — здание, которое местные называют «Сибирским Колизеем».' },
+  { id: 'novosibirsk-embankment', cityId: 'novosibirsk', name: 'Михайловская набережная · Обь', lat: 55.0089, lng: 82.9015, image: '/panoramas/novosibirsk-embankment.jpg', heading: 35, hint: 'Широкая река — Обь. Точка находится на правобережной набережной столицы Сибири.' },
+  { id: 'moscow-red-square', cityId: 'moscow', name: 'Красная площадь · исторический центр', lat: 55.7539, lng: 37.6208, image: '/panoramas/moscow-center.jpg', heading: 0, hint: 'Красные кирпичные стены и кремлёвские башни находятся в самом центре столицы.' },
+  { id: 'moscow-lane', cityId: 'moscow', name: 'Пятницкая улица · Замоскворечье', lat: 55.7417, lng: 37.6137, image: '/panoramas/moscow-lane.jpg', heading: 90, hint: 'Тихий исторический квартал к югу от Кремля. Ищи Пятницкую улицу в Замоскворечье.' },
+  { id: 'omsk-center', cityId: 'omsk', name: 'Улица Ленина · исторический центр', lat: 54.9849, lng: 73.3674, image: '/panoramas/omsk-center.jpg', heading: 0, hint: 'Город на слиянии Оми и Иртыша. Историческая застройка встречается вдоль улицы Ленина.' },
+  { id: 'omsk-embankment', cityId: 'omsk', name: 'Набережная Иртыша', lat: 54.9784, lng: 73.374, image: '/panoramas/omsk-embankment.jpg', heading: 135, hint: 'Перед тобой Иртыш. Нужная набережная находится недалеко от места впадения реки Омь.' },
+  { id: 'new-york-times-square', cityId: 'new-york', name: 'Таймс-сквер · Манхэттен', lat: 40.758, lng: -73.9855, image: '/panoramas/new-york-center.jpg', heading: 0, hint: 'Ищи перекрёсток Бродвея и Седьмой авеню. Жёлтые такси здесь — не совпадение.' },
+  { id: 'new-york-brooklyn', cityId: 'new-york', name: 'Бруклин · квартал браунстоунов', lat: 40.6782, lng: -73.9442, image: '/panoramas/new-york-brooklyn.jpg', heading: 45, hint: 'Типичные каменные дома с высокими крыльцами находятся не на Манхэттене, а в Бруклине.' },
+  { id: 'tokyo-shibuya', cityId: 'tokyo', name: 'Сибуя · знаменитый перекрёсток', lat: 35.6595, lng: 139.7005, image: '/panoramas/tokyo-center.jpg', heading: 0, hint: 'Знаменитый перекрёсток находится рядом со станцией и статуей пса Хатико.' },
+  { id: 'tokyo-yanaka', cityId: 'tokyo', name: 'Янака · старый квартал', lat: 35.7273, lng: 139.7663, image: '/panoramas/tokyo-yanaka.jpg', heading: 180, hint: 'Старый квартал Янака в районе Тайто сохранил деревянные дома и маленькие храмы.' },
+  { id: 'paris-eiffel', cityId: 'paris', name: 'Эйфелева башня · Марсово поле', lat: 48.8584, lng: 2.2945, image: '/panoramas/paris-center.jpg', heading: 0, hint: 'Железная дама наблюдает за этим местом. Ответь на берегу Сены.' },
+  { id: 'paris-montmartre', cityId: 'paris', name: 'Монмартр · Сакре-Кёр', lat: 48.8867, lng: 2.3431, image: '/panoramas/paris-montmartre.jpg', heading: 270, hint: 'Белая базилика на холме — Сакре-Кёр. Это Монмартр, к северу от центра города.' },
+  { id: 'saint-petersburg-palace', cityId: 'saint-petersburg', name: 'Дворцовая площадь · Эрмитаж', lat: 59.939, lng: 30.3158, image: '/panoramas/saint-petersburg-palace.jpg', heading: 0, hint: 'Зелёно-белый дворец — здание Эрмитажа. Александровская колонна стоит на Дворцовой площади.' },
+  { id: 'saint-petersburg-canal', cityId: 'saint-petersburg', name: 'Канал Грибоедова · гранитная набережная', lat: 59.934, lng: 30.327, image: '/panoramas/saint-petersburg-canal.jpg', heading: 90, hint: 'Этот канал назван в честь автора «Горя от ума». Недалеко — Спас на Крови.' },
+  { id: 'istanbul-sultanahmet', cityId: 'istanbul', name: 'Султанахмет · Голубая мечеть', lat: 41.0054, lng: 28.9768, image: '/panoramas/istanbul-sultanahmet.jpg', heading: 0, hint: 'Шесть минаретов принадлежат Голубой мечети. Точка находится в историческом районе Султанахмет.' },
+  { id: 'istanbul-karakoy', cityId: 'istanbul', name: 'Каракёй · Галатская башня', lat: 41.0255, lng: 28.974, image: '/panoramas/istanbul-karakoy.jpg', heading: 225, hint: 'Башня на холме — Галатская. Ищи район Каракёй рядом с Золотым Рогом и Босфором.' },
 ];
 
 export interface ShopItem {
@@ -110,6 +152,14 @@ export function getCity(id: string) {
   return CITIES.find((city) => city.id === id) ?? CITIES[0];
 }
 
+export function getLocation(id: string) {
+  return LOCATIONS.find((location) => location.id === id) ?? LOCATIONS[0];
+}
+
+export function getCityLocations(cityIds: string[]) {
+  return LOCATIONS.filter((location) => cityIds.includes(location.cityId));
+}
+
 export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const radius = 6371;
   const toRad = (value: number) => value * Math.PI / 180;
@@ -134,6 +184,14 @@ export function cityCountLabel(count: number) {
   if (last === 1 && lastTwo !== 11) return 'город';
   if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return 'города';
   return 'городов';
+}
+
+export function pointCountLabel(count: number) {
+  const lastTwo = count % 100;
+  const last = count % 10;
+  if (last === 1 && lastTwo !== 11) return 'точка';
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return 'точки';
+  return 'точек';
 }
 
 export function formatDistance(distance: number | null | undefined) {

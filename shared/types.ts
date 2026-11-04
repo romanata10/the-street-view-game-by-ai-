@@ -41,6 +41,8 @@ export interface PublicPlayer {
 }
 
 export interface PublicLocation {
+  id: string;
+  name: string;
   cityId: string;
   lat: number;
   lng: number;

@@ -14,7 +14,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/three')) return 'panorama-engine';
-          if (id.includes('node_modules/leaflet')) return 'map-engine';
+          if (id.includes('node_modules/leaflet') || id.includes('node_modules/topojson') || id.includes('node_modules/world-atlas')) return 'map-engine';
           if (id.includes('node_modules/react')) return 'react-vendor';
         },
       },

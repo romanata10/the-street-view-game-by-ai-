@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, WebSocket } from 'ws';
 import {
-  CITIES, DEFAULT_PROFILE, SHOP_ITEMS, calculateScore, distanceKm, getCity,
+  CITIES, DEFAULT_PROFILE, LOCATIONS, SHOP_ITEMS, calculateScore, distanceKm, getCity, getCityLocations, getLocation,
   type BattleMode, type GameSettings, type Inventory, type ItemId, type PanoramaMode,
   type PlayerProfile,
 } from '../shared/data';
@@ -45,6 +45,7 @@ interface Room {
   messages: ChatMessage[];
   createdAt: number;
   botTimers: ReturnType<typeof setTimeout>[];
+  locationHistory: string[];
 }
 
 const rooms = new Map<string, Room>();
@@ -148,7 +149,7 @@ function createRoom(settings: GameSettings): Room {
   const room: Room = {
     code, status: 'lobby', settings: normalizeSettings(settings), players: new Map(), hostId: '',
     round: 0, currentLocation: null, roundStartedAt: null, roundEndsAt: null,
-    messages: [], createdAt: Date.now(), botTimers: [],
+    messages: [], createdAt: Date.now(), botTimers: [], locationHistory: [],
   };
   rooms.set(code, room);
   return room;
@@ -168,17 +169,22 @@ function beginRound(room: Room) {
   room.botTimers.forEach(clearTimeout);
   room.botTimers = [];
   const previousCity = room.currentLocation?.cityId;
-  const choices = room.settings.cityIds.length > 1
-    ? room.settings.cityIds.filter((id) => id !== previousCity)
-    : room.settings.cityIds;
-  const cityId = choices[Math.floor(Math.random() * choices.length)] ?? room.settings.cityIds[0];
-  const city = getCity(cityId);
+  const allLocations = getCityLocations(room.settings.cityIds);
+  let unseen = allLocations.filter((location) => !room.locationHistory.includes(location.id));
+  if (!unseen.length) {
+    room.locationHistory = room.currentLocation ? [room.currentLocation.id] : [];
+    unseen = allLocations.filter((location) => !room.locationHistory.includes(location.id));
+  }
+  const differentCity = unseen.filter((location) => location.cityId !== previousCity);
+  const choices = differentCity.length ? differentCity : unseen;
+  const spawn = choices[Math.floor(Math.random() * choices.length)] ?? LOCATIONS[0];
+  room.locationHistory.push(spawn.id);
   const provider = room.settings.panoramaMode === 'mixed'
     ? (Math.random() > 0.5 ? 'street' : 'points')
     : room.settings.panoramaMode;
   room.currentLocation = {
-    cityId, lat: city.center[0], lng: city.center[1], image: city.image,
-    heading: Math.floor(Math.random() * 8) * 45, provider,
+    id: spawn.id, name: spawn.name, cityId: spawn.cityId, lat: spawn.lat, lng: spawn.lng,
+    image: spawn.image, heading: (spawn.heading + Math.floor(Math.random() * 4) * 90) % 360, provider,
   };
   room.status = 'playing';
   room.roundStartedAt = Date.now();
@@ -200,6 +206,7 @@ function beginRound(room: Room) {
 
 function startMatch(room: Room) {
   room.round = 1;
+  room.locationHistory = [];
   room.players.forEach((player) => {
     player.score = 0;
     player.roundWins = 0;
@@ -308,7 +315,7 @@ function useItem(socket: Socket, room: Room, player: PublicPlayer, item: ItemId,
   if (player.inventory[item] <= 0) return error(socket, 'Этот предмет закончился. Загляни в магазин!');
   if (item === 'hint') {
     if (player.hint) return error(socket, 'Подсказка уже открыта в этом раунде');
-    player.hint = getCity(room.currentLocation!.cityId).hint;
+    player.hint = getLocation(room.currentLocation!.id).hint;
     notify(room, player.id, 'Гео-подсказка открыта', 'success');
   } else if (item === 'speed') {
     player.effects.speedUntil = Date.now() + 45_000;

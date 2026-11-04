@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import { feature } from 'topojson-client';
+import worldAtlas from 'world-atlas/countries-110m.json';
 import type { LatLng, PublicLocation, PublicPlayer } from '../../shared/types';
+
+const OFFLINE_LAND = feature(worldAtlas as any, worldAtlas.objects.land as any) as any;
 
 interface GuessMapProps {
   center: [number, number];
@@ -36,13 +40,38 @@ export default function GuessMap({
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, {
       center, zoom, zoomControl: false, attributionControl: true,
-      worldCopyJump: true, minZoom: 2, maxZoom: 18,
+      worldCopyJump: true, minZoom: 1, maxZoom: 18,
     });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
+    map.createPane('offline-map-pane');
+    map.getPane('offline-map-pane')!.style.zIndex = '150';
+    map.getPane('offline-map-pane')!.style.pointerEvents = 'none';
+    const offlineLayer = L.layerGroup().addTo(map);
+    L.geoJSON(OFFLINE_LAND, {
+      interactive: false, pane: 'offline-map-pane',
+      style: { color: '#4c6252', weight: 0.7, opacity: 0.7, fillColor: '#283a2e', fillOpacity: 0.85 },
+    }).addTo(offlineLayer);
+    for (let latitude = -60; latitude <= 60; latitude += 30) {
+      L.polyline([[latitude, -180], [latitude, 180]], { interactive: false, pane: 'offline-map-pane', color: '#68806b', weight: 0.4, opacity: 0.13 }).addTo(offlineLayer);
+    }
+    for (let longitude = -180; longitude <= 180; longitude += 30) {
+      L.polyline([[-85, longitude], [85, longitude]], { interactive: false, pane: 'offline-map-pane', color: '#68806b', weight: 0.4, opacity: 0.13 }).addTo(offlineLayer);
+    }
+    const tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO · Natural Earth',
       subdomains: 'abcd', maxZoom: 20,
     }).addTo(map);
+    let tileErrors = 0;
+    let fallbackAdded = false;
+    tiles.on('tileerror', () => {
+      tileErrors += 1;
+      if (fallbackAdded || tileErrors < 4 || !mapRef.current) return;
+      fallbackAdded = true;
+      map.removeLayer(tiles);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap · Natural Earth', maxZoom: 19,
+      }).addTo(map);
+    });
     layersRef.current = L.layerGroup().addTo(map);
     map.on('click', (event: L.LeafletMouseEvent) => {
       if (!callbacksRef.current.disabled) callbacksRef.current.onGuess?.({ lat: event.latlng.lat, lng: event.latlng.lng });

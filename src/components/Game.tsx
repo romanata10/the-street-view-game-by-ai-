@@ -75,7 +75,7 @@ export default function Game({ game }: { game: GameConnection }) {
   const selectedCities = useMemo(() => room.settings.cityIds.map(getCity), [room.settings.cityIds]);
   const singleCity = selectedCities.length === 1 ? selectedCities[0] : null;
   const mapCenter: [number, number] = singleCity ? singleCity.center : [28, 15];
-  const mapZoom = singleCity ? Math.max(10, singleCity.zoom - 1) : 2;
+  const mapZoom = singleCity ? Math.max(10, singleCity.zoom - 1) : 1;
   const blackoutLeft = Math.max(0, self.effects.blackoutUntil - now - game.serverOffset);
   const speedLeft = Math.max(0, self.effects.speedUntil - now - game.serverOffset);
 
@@ -129,7 +129,7 @@ export default function Game({ game }: { game: GameConnection }) {
           <section className="result-map-section">
             <div className="result-map-heading">
               <div><span className="eyebrow"><CheckCheck size={14} /> ТОЧКА НАЙДЕНА</span><h1>{winner?.id === self.id ? 'Блестящий раунд!' : winner ? `Ближе всех: ${winner.name}` : 'Раунд завершён'}</h1><p>Правильный ответ и все ваши предположения — на карте.</p></div>
-              <div className="actual-place-card"><img src={actualCity.image} alt={actualCity.name} /><span><small>ПРАВИЛЬНЫЙ ОТВЕТ</small><b>{actualCity.flag} {actualCity.name}</b><em>{actualCity.country} · {location.lat.toFixed(4)}°, {location.lng.toFixed(4)}°</em></span></div>
+              <div className="actual-place-card"><img src={actualCity.image} alt={actualCity.name} /><span><small>ПРАВИЛЬНЫЙ ОТВЕТ</small><b>{actualCity.flag} {actualCity.name}</b><em>{location.name} · {actualCity.country}</em></span></div>
             </div>
             <div className="result-map-wrap">
               <GuessMap center={mapCenter} zoom={mapZoom} guess={self.guess} players={room.players} selfId={self.id} actual={location} reveal disabled expanded />

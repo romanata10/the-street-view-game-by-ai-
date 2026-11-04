@@ -5,7 +5,7 @@ import {
   Swords, Trophy, Users, Video, WandSparkles, X,
 } from 'lucide-react';
 import {
-  BATTLE_LABELS, CITIES, cityCountLabel, getCity, type BattleMode, type GameSettings, type PanoramaMode,
+  BATTLE_LABELS, CITIES, LOCATIONS, cityCountLabel, getCity, getCityLocations, pointCountLabel, type BattleMode, type GameSettings, type PanoramaMode,
 } from '../../shared/data';
 import type { GameConnection } from '../hooks/useGameConnection';
 import ShopModal from './ShopModal';
@@ -33,6 +33,7 @@ export default function MainMenu({ game }: { game: GameConnection }) {
   const [draftName, setDraftName] = useState(game.name);
   const citiesRef = useRef<HTMLElement>(null);
   const heroCity = getCity(settings.cityIds[0]);
+  const selectedLocationCount = getCityLocations(settings.cityIds).length;
 
   useEffect(() => localStorage.setItem('geosvoi-settings', JSON.stringify(settings)), [settings]);
 
@@ -93,7 +94,7 @@ export default function MainMenu({ game }: { game: GameConnection }) {
               <div className="hero-tags">
                 <span><Users size={14} /> До 8 игроков</span>
                 <span><Navigation size={14} /> Панорамы 360°</span>
-                <span><Globe2 size={14} /> 6 городов</span>
+                <span><Globe2 size={14} /> {CITIES.length} городов · {LOCATIONS.length} точек</span>
               </div>
             </div>
             <div className="hero-location-card">
@@ -172,7 +173,7 @@ export default function MainMenu({ game }: { game: GameConnection }) {
               );
             })}
           </div>
-          <div className="selection-summary"><MapPin size={15} /><span>В матче: <b>{settings.cityIds.length === CITIES.length ? 'случайные города мира' : settings.cityIds.map((id) => getCity(id).name).join(' · ')}</b></span><span className="summary-count">{settings.cityIds.length} / {CITIES.length}</span></div>
+          <div className="selection-summary"><MapPin size={15} /><span>В матче: <b>{settings.cityIds.length === CITIES.length ? 'случайные города мира' : settings.cityIds.map((id) => getCity(id).name).join(' · ')}</b></span><span className="summary-count">{settings.cityIds.length} / {CITIES.length} · {selectedLocationCount} {pointCountLabel(selectedLocationCount)}</span></div>
         </section>
 
         <section className="menu-feature-strip">
