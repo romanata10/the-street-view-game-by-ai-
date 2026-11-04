@@ -31,7 +31,9 @@ export default function Lobby({ game }: { game: GameConnection }) {
   const allReady = room.players.every((player) => player.isHost || player.ready);
   const selectedCities = room.settings.cityIds.map(getCity);
 
-  useEffect(() => chatEnd.current?.scrollIntoView({ behavior: 'smooth' }), [room.messages.length]);
+  useEffect(() => {
+    chatEnd.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [room.messages.length]);
 
   const copy = async (kind: 'code' | 'link') => {
     await copyText(kind === 'code' ? room.code : `${location.origin}${location.pathname}?room=${room.code}`);

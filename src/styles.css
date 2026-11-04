@@ -218,6 +218,24 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .rules-tip { display: flex; align-items: center; gap: 13px; margin: 16px 0; padding: 15px; color: #aab5a7; background: rgba(201,244,91,.055); border-radius: 10px; font-size: 10px; line-height: 1.6; }
 .rules-tip svg { flex: 0 0 auto; color: var(--lime); }
 .rules-tip b { color: #e8efe3; }
+.rules-tabs { display: flex; gap: 5px; margin: 20px 0 16px; padding: 4px; background: #111712; border: 1px solid var(--line); border-radius: 10px; }
+.rules-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; color: #849184; background: transparent; border-radius: 7px; font-size: 9px; font-weight: 700; }
+.rules-tabs button.active { color: var(--lime); background: #293528; }
+.friend-tutorial { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.friend-tutorial > div { position: relative; display: flex; align-items: flex-start; gap: 11px; min-height: 118px; padding: 16px; background: #121813; border: 1px solid var(--line); border-radius: 11px; }
+.friend-tutorial > div > span { width: 25px; height: 25px; display: grid; place-items: center; flex: 0 0 auto; color: #17200f; background: var(--lime); border-radius: 50%; font-size: 9px; font-weight: 800; }
+.friend-tutorial section { padding-right: 15px; }
+.friend-tutorial b { font-size: 10px; line-height: 1.5; }
+.friend-tutorial p { margin-top: 6px; color: #879487; font-size: 8px; line-height: 1.6; }
+.friend-tutorial > div > svg { position: absolute; right: 12px; top: 13px; color: #617355; }
+.invite-example { display: flex; align-items: center; gap: 14px; margin: 12px 0; padding: 12px 15px; background: rgba(201,244,91,.045); border: 1px dashed rgba(201,244,91,.3); border-radius: 10px; }
+.invite-example > span { color: #829079; font-size: 7px; font-weight: 800; letter-spacing: .1em; }
+.invite-example b { color: var(--lime); font-family: 'Unbounded', sans-serif; font-size: 16px; letter-spacing: .12em; }
+.invite-example small { margin-left: auto; color: #6e7c6d; font-size: 8px; }
+.gadget-guide { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 13px; }
+.gadget-guide > div { min-height: 90px; padding: 14px; background: #121813; border: 1px solid var(--line); border-radius: 10px; }
+.gadget-guide b { color: #dbe5d6; font-size: 9px; }
+.gadget-guide p { margin-top: 7px; color: #839083; font-size: 8px; line-height: 1.55; }
 .rules-modal > .primary-button { width: 100%; }
 
 .shop-modal { width: min(1040px, 100%); padding: 34px; }
@@ -703,6 +721,10 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .shop-grid { grid-template-columns: 1fr; }
   .shop-item { min-height: 210px; }
   .rules-list { grid-template-columns: 1fr; }
+  .friend-tutorial { grid-template-columns: 1fr; }
+  .gadget-guide { grid-template-columns: repeat(2, 1fr); }
+  .invite-example { flex-wrap: wrap; gap: 8px 12px; }
+  .invite-example small { width: 100%; margin-left: 0; }
   .game-header { height: 62px; padding: 0 13px; gap: 12px; }
   .lobby-header .brand-word, .in-game-header .brand-word { display: none; }
   .lobby-header-status > .connection-badge, .header-divider, .header-shop-button { display: none; }

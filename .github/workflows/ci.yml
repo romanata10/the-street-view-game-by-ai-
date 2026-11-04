@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate cities and panoramas
+        run: npm run test:content
+      - name: Type-check and build
+        run: npm run build
+      - name: Check production server
+        run: |
+          npm start &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'Production server did not become healthy'
+          exit 1
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build --tag geosvoi:ci .
+      - name: Check container health
+        run: |
+          docker run --detach --name geosvoi-ci --publish 3000:3000 geosvoi:ci
+          trap 'docker logs geosvoi-ci; docker rm --force geosvoi-ci' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'Production container did not become healthy'
+          exit 1

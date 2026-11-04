@@ -31,6 +31,7 @@ export default function MainMenu({ game }: { game: GameConnection }) {
   const [joinOpen, setJoinOpen] = useState(false);
   const [nameOpen, setNameOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [rulesTab, setRulesTab] = useState<'game' | 'friends' | 'gadgets'>('game');
   const [joinCode, setJoinCode] = useState(() => new URLSearchParams(location.search).get('room')?.toUpperCase() || '');
   const [draftName, setDraftName] = useState(game.name);
   const citiesRef = useRef<HTMLElement>(null);
@@ -210,14 +211,43 @@ export default function MainMenu({ game }: { game: GameConnection }) {
         </Modal>
       )}
       {rulesOpen && (
-        <Modal onClose={() => setRulesOpen(false)} className="rules-modal" label="Как играть">
-          <span className="eyebrow"><CircleHelp size={14} /> КРАТКИЙ БРИФИНГ</span><h2>Три шага до победы</h2>
-          <div className="rules-list">
-            <div><span>01</span><Navigation size={24} /><h3>Исследуй</h3><p>Вращай панораму мышью или стрелками. Признаки города — в архитектуре, знаках, машинах и природе.</p></div>
-            <div><span>02</span><MapPin size={24} /><h3>Выбери точку</h3><p>Кликни по карте в правом нижнем углу. Ответ можно менять до отправки.</p></div>
-            <div><span>03</span><Swords size={24} /><h3>Побеждай</h3><p>До 5000 очков за точность. В режиме «Кто ближе» решают победы в раундах, а в блице — ещё и скорость.</p></div>
+        <Modal onClose={() => setRulesOpen(false)} className="rules-modal" label="Обучение игре">
+          <span className="eyebrow"><CircleHelp size={14} /> ЦЕНТР ОБУЧЕНИЯ</span>
+          <h2>{rulesTab === 'game' ? 'Три шага до победы' : rulesTab === 'friends' ? 'Как играть с другом' : 'Гаджеты и управление'}</h2>
+          <div className="rules-tabs" role="tablist">
+            <button className={rulesTab === 'game' ? 'active' : ''} onClick={() => setRulesTab('game')}><Navigation size={14} /> Основы</button>
+            <button className={rulesTab === 'friends' ? 'active' : ''} onClick={() => setRulesTab('friends')}><Users size={14} /> С друзьями</button>
+            <button className={rulesTab === 'gadgets' ? 'active' : ''} onClick={() => setRulesTab('gadgets')}><WandSparkles size={14} /> Гаджеты</button>
           </div>
-          <div className="rules-tip"><Sparkles size={19} /><span><b>Не забудь про гаджеты.</b> Подсказка поможет тебе, а чёрный экран на 5 секунд слегка усложнит жизнь другу.</span></div>
+          {rulesTab === 'game' && <>
+            <div className="rules-list">
+              <div><span>01</span><Navigation size={24} /><h3>Исследуй</h3><p>Вращай панораму мышью или стрелками. Признаки города — в архитектуре, знаках, машинах и природе.</p></div>
+              <div><span>02</span><MapPin size={24} /><h3>Выбери точку</h3><p>Кликни по карте в правом нижнем углу. Ответ можно менять до отправки. Enter — отправить, M — раскрыть карту.</p></div>
+              <div><span>03</span><Swords size={24} /><h3>Побеждай</h3><p>До 5000 очков за точность. В режиме «Кто ближе» решают победы в раундах, а в блице — ещё и скорость.</p></div>
+            </div>
+            <div className="rules-tip"><Sparkles size={19} /><span><b>Не забудь про гаджеты.</b> Подсказка поможет тебе, а чёрный экран на 5 секунд слегка усложнит жизнь другу.</span></div>
+          </>}
+          {rulesTab === 'friends' && <>
+            <div className="friend-tutorial">
+              <div><span>1</span><section><b>Один игрок создаёт комнату</b><p>Выбери города и правила, нажми «Создать комнату». Ты станешь хостом матча.</p></section><Users size={21} /></div>
+              <div><span>2</span><section><b>Отправь приглашение другу</b><p>В лобби нажми «Скопировать ссылку» или продиктуй шестизначный код. Друг откроет ссылку либо выберет «Войти по коду».</p></section><Copy size={21} /></div>
+              <div><span>3</span><section><b>Друг подтверждает готовность</b><p>Проверьте имена и напишите друг другу в чат. Каждый гость нажимает «Я готов играть».</p></section><Check size={21} /></div>
+              <div><span>4</span><section><b>Хост начинает матч</b><p>У всех будет одинаковая локация и таймер. Отвечайте независимо — результат раунда откроется после всех ответов.</p></section><Play size={21} /></div>
+            </div>
+            <div className="invite-example"><span>ПРИМЕР ПРИГЛАШЕНИЯ</span><b>GEO24X</b><small>geosvoi.example/?room=GEO24X</small></div>
+            <div className="rules-tip"><Users size={19} /><span><b>Регистрация не нужна.</b> Играть можно с разных устройств. В одной комнате помещается до 8 игроков, а для тренировки хост может добавить бота.</span></div>
+          </>}
+          {rulesTab === 'gadgets' && <>
+            <div className="gadget-guide">
+              <div><b>1 · Гео-подсказка</b><p>Открывает подсказку именно для текущей локации.</p></div>
+              <div><b>2 · Чёрный экран</b><p>Выбери соперника — его панорама исчезнет на 5 секунд.</p></div>
+              <div><b>3 · Турбо-шаг</b><p>На 45 секунд ускоряет вращение и навигацию камеры.</p></div>
+              <div><b>4 · Анти-лаг</b><p>Блокирует одну атаку чёрным экраном.</p></div>
+              <div><b>5 · Риск-раунд</b><p>Активируй до ответа, чтобы удвоить очки за раунд.</p></div>
+              <div><b>Оптика PRO</b><p>Постоянное улучшение zoom. Работает автоматически.</p></div>
+            </div>
+            <div className="rules-tip"><ShoppingBag size={19} /><span><b>Монеты не нужно покупать.</b> Они начисляются за каждый ответ, точность и победу в раунде. Магазин доступен и в меню, и во время матча.</span></div>
+          </>}
           <button className="primary-button" onClick={() => setRulesOpen(false)}>Всё понятно, в игру! <Play size={17} /></button>
         </Modal>
       )}
