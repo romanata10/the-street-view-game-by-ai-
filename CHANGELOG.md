@@ -4,13 +4,15 @@
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-11-06
+
 ### Добавлено
 
 - Свободный совместный режим «Погуляй с другом» без таймера, очков и раундов.
 - Независимая смена всех 16 локаций, подключение после старта и переход к текущей сцене друга.
 - Избранные места с сохранением Google `panoId` и направления взгляда в браузере.
 - Постоянный статус и WebSocket-уведомления о совпадении места во всех режимах.
-- Центр загрузок, инструкция DOWNLOAD и production ZIP в дополнение к TAR.GZ.
+- Центр загрузок с production ZIP и TAR.GZ, пошаговой установкой и инструкцией DOWNLOAD.
 
 ### Исправлено
 
@@ -47,4 +49,5 @@
 - GitHub Actions: контент, TypeScript, сборка, запуск сервера и Docker healthcheck.
 - Проверка контента через `npm run test:content`.
 
+[1.1.0]: https://github.com/romanata10/the-street-view-game-by-ai-/releases/tag/v1.1.0
 [1.0.0]: https://github.com/romanata10/the-street-view-game-by-ai-/releases/tag/v1.0.0

@@ -39,8 +39,10 @@
 
 В меню игры нажмите **«Скачать»**: там показаны архивы и пошаговая установка.
 
-- [ZIP с последними исходниками](https://github.com/romanata10/the-street-view-game-by-ai-/archive/refs/heads/main.zip) — проще всего распаковать на любой системе.
-- [Последний релиз](https://github.com/romanata10/the-street-view-game-by-ai-/releases/latest) — готовые production ZIP/TAR.GZ и SHA-256.
+- [Production ZIP 1.1.0](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.0/geosvoi-1.1.0-production.zip) — готовый клиент и сервер, команда `npm run build` не нужна.
+- [Production TAR.GZ 1.1.0](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.0/geosvoi-1.1.0-production.tar.gz) — тот же набор файлов для Linux и macOS.
+- [ZIP с последними исходниками](https://github.com/romanata10/the-street-view-game-by-ai-/archive/refs/heads/main.zip) — для разработки и своей сборки.
+- [Последний релиз](https://github.com/romanata10/the-street-view-game-by-ai-/releases/latest) — все архивы и SHA-256.
 - [Полная инструкция по скачиванию](docs/DOWNLOAD.ru.md) — установка, запуск, подключение друга и решение ошибок.
 
 RAR не нужен: ZIP открывается стандартными средствами Windows, macOS и Linux.
