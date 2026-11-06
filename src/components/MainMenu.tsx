@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowRight, Bot, Check, ChevronDown, CircleHelp, Clock3, Copy, Crosshair, Globe2,
+  ArrowRight, Bot, Check, ChevronDown, CircleHelp, Clock3, Copy, Crosshair, Download, Footprints, Globe2,
   KeyRound, Layers3, Map, MapPin, Navigation, Play, Plus, Route, ShoppingBag, Sparkles,
   Swords, Trophy, Users, Video, WandSparkles, X,
 } from 'lucide-react';
@@ -8,6 +8,7 @@ import {
   BATTLE_LABELS, CITIES, LOCATIONS, cityCountLabel, getCity, getCityLocations, pointCountLabel, type BattleMode, type GameSettings, type PanoramaMode,
 } from '../../shared/data';
 import type { GameConnection } from '../hooks/useGameConnection';
+import DownloadModal from './DownloadModal';
 import ShopModal from './ShopModal';
 import { CoinBalance, Logo, Modal } from './UI';
 
@@ -28,10 +29,11 @@ function loadSettings(): GameSettings {
 export default function MainMenu({ game }: { game: GameConnection }) {
   const [settings, setSettings] = useState<GameSettings>(loadSettings);
   const [shopOpen, setShopOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [nameOpen, setNameOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [rulesTab, setRulesTab] = useState<'game' | 'friends' | 'gadgets'>('game');
+  const [rulesTab, setRulesTab] = useState<'game' | 'friends' | 'walk' | 'gadgets'>('game');
   const [joinCode, setJoinCode] = useState(() => new URLSearchParams(location.search).get('room')?.toUpperCase() || '');
   const [draftName, setDraftName] = useState(game.name);
   const citiesRef = useRef<HTMLElement>(null);
@@ -77,6 +79,7 @@ export default function MainMenu({ game }: { game: GameConnection }) {
           <button onClick={() => setRulesOpen(true)}>Как играть</button>
         </nav>
         <div className="header-actions">
+          <button className="download-header-button" onClick={() => setDownloadOpen(true)}><Download size={16} /><span>Скачать</span></button>
           <CoinBalance value={game.profile.coins} />
           <button className="profile-chip" onClick={() => { setDraftName(game.name); setNameOpen(true); }}>
             <span className="profile-avatar">🦊</span>
@@ -155,6 +158,11 @@ export default function MainMenu({ game }: { game: GameConnection }) {
               <span>или</span>
               <button onClick={() => setJoinOpen(true)}><KeyRound size={16} /> Войти по коду</button>
             </div>
+            <button className="free-walk-button" disabled={!game.connected} onClick={() => game.createWalk(settings)}>
+              <span className="free-walk-icon"><Footprints size={20} /></span>
+              <span><b>Погулять с другом</b><small>Любые места вместе · без таймера и очков</small></span>
+              <ArrowRight size={18} />
+            </button>
           </aside>
         </section>
 
@@ -191,6 +199,7 @@ export default function MainMenu({ game }: { game: GameConnection }) {
       <footer className="site-footer page-shell"><Logo compact /><span>Города становятся ближе, когда играешь с друзьями.</span><span>Без регистрации · В любом браузере</span></footer>
 
       {shopOpen && <ShopModal profile={game.profile} onBuy={game.buyLocal} onClose={() => setShopOpen(false)} />}
+      {downloadOpen && <DownloadModal onClose={() => setDownloadOpen(false)} />}
       {joinOpen && (
         <Modal onClose={() => setJoinOpen(false)} className="join-modal" label="Войти в комнату">
           <span className="modal-symbol"><KeyRound size={27} /></span>
@@ -213,10 +222,11 @@ export default function MainMenu({ game }: { game: GameConnection }) {
       {rulesOpen && (
         <Modal onClose={() => setRulesOpen(false)} className="rules-modal" label="Обучение игре">
           <span className="eyebrow"><CircleHelp size={14} /> ЦЕНТР ОБУЧЕНИЯ</span>
-          <h2>{rulesTab === 'game' ? 'Три шага до победы' : rulesTab === 'friends' ? 'Как играть с другом' : 'Гаджеты и управление'}</h2>
+          <h2>{rulesTab === 'game' ? 'Три шага до победы' : rulesTab === 'friends' ? 'Как играть с другом' : rulesTab === 'walk' ? 'Свободная прогулка' : 'Гаджеты и управление'}</h2>
           <div className="rules-tabs" role="tablist">
             <button className={rulesTab === 'game' ? 'active' : ''} onClick={() => setRulesTab('game')}><Navigation size={14} /> Основы</button>
             <button className={rulesTab === 'friends' ? 'active' : ''} onClick={() => setRulesTab('friends')}><Users size={14} /> С друзьями</button>
+            <button className={rulesTab === 'walk' ? 'active' : ''} onClick={() => setRulesTab('walk')}><Footprints size={14} /> Прогулка</button>
             <button className={rulesTab === 'gadgets' ? 'active' : ''} onClick={() => setRulesTab('gadgets')}><WandSparkles size={14} /> Гаджеты</button>
           </div>
           {rulesTab === 'game' && <>
@@ -236,6 +246,15 @@ export default function MainMenu({ game }: { game: GameConnection }) {
             </div>
             <div className="invite-example"><span>ПРИМЕР ПРИГЛАШЕНИЯ</span><b>GEO24X</b><small>geosvoi.example/?room=GEO24X</small></div>
             <div className="rules-tip"><Users size={19} /><span><b>Регистрация не нужна.</b> Играть можно с разных устройств. В одной комнате помещается до 8 игроков, а для тренировки хост может добавить бота.</span></div>
+          </>}
+          {rulesTab === 'walk' && <>
+            <div className="friend-tutorial walk-tutorial">
+              <div><span>1</span><section><b>Начни прогулку</b><p>Нажми «Погулять с другом», отправь ссылку и дождись готовности. Здесь нет раундов, очков и таймера.</p></section><Footprints size={21} /></div>
+              <div><span>2</span><section><b>Выбирай любые места</b><p>«Сменить место» открывает все 16 локаций. Каждый может осматриваться самостоятельно или повторить маршрут друга.</p></section><MapPin size={21} /></div>
+              <div><span>3</span><section><b>Не теряйте друг друга</b><p>Статус «В том же месте» работает и в прогулке, и в соревнованиях. Кнопка «К другу» переносит в его текущую сцену.</p></section><Users size={21} /></div>
+              <div><span>4</span><section><b>Сохраняй панорамы</b><p>Звезда добавляет место в избранное. В Google сохраняются точный panoId и направление взгляда, чтобы вернуться позже.</p></section><Sparkles size={21} /></div>
+            </div>
+            <div className="rules-tip"><Footprints size={19} /><span><b>Друг может подключиться после старта.</b> Он появится рядом с текущим местом хоста. Избранное хранится локально в твоём браузере.</span></div>
           </>}
           {rulesTab === 'gadgets' && <>
             <div className="gadget-guide">

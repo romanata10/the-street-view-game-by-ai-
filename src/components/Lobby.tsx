@@ -24,6 +24,7 @@ export default function Lobby({ game }: { game: GameConnection }) {
   const room = game.room!;
   const self = game.self!;
   const isHost = self.id === room.hostId;
+  const isWalk = room.mode === 'walk';
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const [chatText, setChatText] = useState('');
   const [shopOpen, setShopOpen] = useState(false);
@@ -69,7 +70,7 @@ export default function Lobby({ game }: { game: GameConnection }) {
 
       <main className="lobby-main page-shell">
         <section className="lobby-title-row">
-          <div><span className="eyebrow"><span className="live-dot" /> ЗАКРЫТАЯ КОМНАТА</span><h1>Собираем команду</h1><p>Пока друзья подключаются, проверь маршрут и правила матча.</p></div>
+          <div><span className="eyebrow"><span className="live-dot" /> {isWalk ? 'СВОБОДНАЯ ПРОГУЛКА' : 'ЗАКРЫТАЯ КОМНАТА'}</span><h1>{isWalk ? 'Собираемся на прогулку' : 'Собираем команду'}</h1><p>{isWalk ? 'Без таймера, ответов и очков. После старта можно менять места и переходить к другу.' : 'Пока друзья подключаются, проверь маршрут и правила матча.'}</p></div>
           <div className="invite-panel">
             <div><small>КОД ПРИГЛАШЕНИЯ</small><button onClick={() => copy('code')}>{room.code}<Copy size={17} /></button></div>
             <button className="copy-link-button" onClick={() => copy('link')}>{copied === 'link' ? <CheckCheck size={17} /> : <Link2 size={17} />}{copied === 'link' ? 'Ссылка скопирована' : 'Скопировать ссылку'}</button>
@@ -79,7 +80,7 @@ export default function Lobby({ game }: { game: GameConnection }) {
 
         <div className="lobby-grid">
           <section className="lobby-players-panel panel-card">
-            <div className="panel-heading"><div><Users size={19} /><h2>Игроки</h2><span>{room.players.length} / 8</span></div>{isHost && <button onClick={game.actions.addBot} disabled={room.players.length >= 8}><Bot size={16} /><Plus size={13} /> Добавить бота</button>}</div>
+            <div className="panel-heading"><div><Users size={19} /><h2>Игроки</h2><span>{room.players.length} / 8</span></div>{isHost && !isWalk && <button onClick={game.actions.addBot} disabled={room.players.length >= 8}><Bot size={16} /><Plus size={13} /> Добавить бота</button>}</div>
             <div className="lobby-player-list">
               {room.players.map((player, index) => (
                 <div className={`lobby-player ${player.ready || player.isHost ? 'is-ready' : ''}`} key={player.id} style={{ '--player-color': player.color } as React.CSSProperties}>
@@ -115,10 +116,10 @@ export default function Lobby({ game }: { game: GameConnection }) {
               <div><small>МАРШРУТ МАТЧА</small><b>{selectedCities.length === 1 ? selectedCities[0].name : `${selectedCities.length} ${cityCountLabel(selectedCities.length)} в миксе`}</b><span>{selectedCities.map((city) => city.flag).join(' ')}</span></div>
             </div>
             <div className="lobby-setting-block"><label>Города <span>{room.settings.cityIds.length} выбрано · {getCityLocations(room.settings.cityIds).length} {pointCountLabel(getCityLocations(room.settings.cityIds).length)}</span></label><div className="lobby-city-chips">{CITIES.map((city) => <button key={city.id} disabled={!isHost} className={room.settings.cityIds.includes(city.id) ? 'selected' : ''} onClick={() => toggleCity(city.id)} title={city.name}>{city.flag}<span>{city.name}</span>{room.settings.cityIds.includes(city.id) && <Check size={11} />}</button>)}</div></div>
-            <div className="lobby-setting-block"><label>Формат</label><div className="lobby-select-grid">{(Object.keys(BATTLE_LABELS) as (keyof typeof BATTLE_LABELS)[]).map((mode) => <button key={mode} disabled={!isHost} className={room.settings.battleMode === mode ? 'selected' : ''} onClick={() => updateSettings({ battleMode: mode, timeLimit: mode === 'blitz' ? 45 : room.settings.timeLimit === 45 ? 120 : room.settings.timeLimit })}>{mode === 'classic' ? <Trophy size={15} /> : mode === 'closest' ? <Sparkles size={15} /> : <Clock3 size={15} />}{BATTLE_LABELS[mode].name}</button>)}</div></div>
+            {!isWalk && <div className="lobby-setting-block"><label>Формат</label><div className="lobby-select-grid">{(Object.keys(BATTLE_LABELS) as (keyof typeof BATTLE_LABELS)[]).map((mode) => <button key={mode} disabled={!isHost} className={room.settings.battleMode === mode ? 'selected' : ''} onClick={() => updateSettings({ battleMode: mode, timeLimit: mode === 'blitz' ? 45 : room.settings.timeLimit === 45 ? 120 : room.settings.timeLimit })}>{mode === 'classic' ? <Trophy size={15} /> : mode === 'closest' ? <Sparkles size={15} /> : <Clock3 size={15} />}{BATTLE_LABELS[mode].name}</button>)}</div></div>}
             <div className="lobby-setting-block"><label>Панорамы</label><div className="lobby-select-grid"><button disabled={!isHost} className={room.settings.panoramaMode === 'street' ? 'selected' : ''} onClick={() => updateSettings({ panoramaMode: 'street' })}><Video size={15} />Street View</button><button disabled={!isHost} className={room.settings.panoramaMode === 'points' ? 'selected' : ''} onClick={() => updateSettings({ panoramaMode: 'points' })}>◎ Точки</button><button disabled={!isHost} className={room.settings.panoramaMode === 'mixed' ? 'selected' : ''} onClick={() => updateSettings({ panoramaMode: 'mixed' })}>⤨ Микс</button></div></div>
-            <div className="lobby-match-summary"><div><span>Раундов</span><b>{room.settings.rounds}</b></div><div><span>Время</span><b>{room.settings.timeLimit ? `${room.settings.timeLimit} сек` : '∞'}</b></div><div><span>База / раунд</span><b>5 000</b></div></div>
-            {isHost ? <button className="primary-button lobby-start-button" disabled={!allReady || !game.connected} onClick={game.actions.start}><Play size={18} fill="currentColor" /><span>{allReady ? 'Начать матч' : 'Ждём готовности игроков'}</span><ArrowRight size={19} /></button> : <div className="waiting-host"><span className="spinner" /> Хост начнёт матч, когда все будут готовы</div>}
+            <div className="lobby-match-summary">{isWalk ? <><div><span>Локаций</span><b>16</b></div><div><span>Время</span><b>∞</b></div><div><span>Соревнование</span><b>Нет</b></div></> : <><div><span>Раундов</span><b>{room.settings.rounds}</b></div><div><span>Время</span><b>{room.settings.timeLimit ? `${room.settings.timeLimit} сек` : '∞'}</b></div><div><span>База / раунд</span><b>5 000</b></div></>}</div>
+            {isHost ? <button className="primary-button lobby-start-button" disabled={!allReady || !game.connected} onClick={game.actions.start}><Play size={18} fill="currentColor" /><span>{allReady ? (isWalk ? 'Начать прогулку' : 'Начать матч') : 'Ждём готовности игроков'}</span><ArrowRight size={19} /></button> : <div className="waiting-host"><span className="spinner" /> {isWalk ? 'Хост начнёт прогулку, когда все будут готовы' : 'Хост начнёт матч, когда все будут готовы'}</div>}
           </aside>
         </div>
       </main>

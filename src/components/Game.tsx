@@ -7,9 +7,11 @@ import {
 } from 'lucide-react';
 import { BATTLE_LABELS, CITIES, SHOP_ITEMS, formatDistance, getCity, type ItemId } from '../../shared/data';
 import type { PublicPlayer } from '../../shared/types';
+import { viewsSharePlace } from '../../shared/presence';
 import type { GameConnection } from '../hooks/useGameConnection';
 import GuessMap from './GuessMap';
 import PanoramaViewer from './PanoramaViewer';
+import { SamePlaceBanner } from './Presence';
 import ShopModal from './ShopModal';
 import { Avatar, CoinBalance, ItemIcon, Logo, Modal } from './UI';
 
@@ -37,16 +39,19 @@ function GameHeader({ game, result = false }: { game: GameConnection; result?: b
   );
 }
 
-function PlayerStrip({ players, selfId }: { players: PublicPlayer[]; selfId: string }) {
+function PlayerStrip({ players, self }: { players: PublicPlayer[]; self: PublicPlayer }) {
   return (
     <div className="game-player-strip">
-      {players.map((player) => (
-        <div className={`game-player-chip ${player.guess ? 'has-guessed' : ''}`} key={player.id} style={{ '--player-color': player.color } as React.CSSProperties}>
-          <Avatar player={player} size="small" showStatus />
-          <div><b>{player.name}{player.id === selfId ? ' · ты' : ''}</b><span>{player.guess ? <><Check size={10} /> Ответ готов</> : 'Осматривается'}</span></div>
-          <strong>{player.score.toLocaleString('ru-RU')}</strong>
-        </div>
-      ))}
+      {players.map((player) => {
+        const together = player.id !== self.id && viewsSharePlace(self.view, player.view);
+        return (
+          <div className={`game-player-chip ${player.guess ? 'has-guessed' : ''} ${together ? 'is-nearby' : ''}`} key={player.id} style={{ '--player-color': player.color } as React.CSSProperties}>
+            <Avatar player={player} size="small" showStatus />
+            <div><b>{player.name}{player.id === self.id ? ' · ты' : ''}</b><span>{player.guess ? <><Check size={10} /> Ответ готов</> : together ? <><MapPin size={10} /> Рядом с тобой</> : 'Осматривается'}</span></div>
+            <strong>{player.score.toLocaleString('ru-RU')}</strong>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -174,8 +179,9 @@ export default function Game({ game }: { game: GameConnection }) {
             <span className="panorama-quality">360°</span>
           </div>
           <RoundTimer room={room} offset={game.serverOffset} now={now} />
-          <PlayerStrip players={room.players} selfId={self.id} />
+          <PlayerStrip players={room.players} self={self} />
         </div>
+        <SamePlaceBanner players={room.players} self={self} />
 
         <div className="gadget-rail">
           <div className="gadget-rail-title"><Zap size={14} /><span>ГАДЖЕТЫ</span></div>

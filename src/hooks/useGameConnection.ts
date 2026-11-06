@@ -136,6 +136,10 @@ export function useGameConnection() {
     send({ type: 'solo', name: nameRef.current, playerId: playerIdRef.current, profile: profileRef.current, settings });
   }, [send]);
 
+  const createWalk = useCallback((settings: GameSettings) => {
+    send({ type: 'createWalk', name: nameRef.current, playerId: playerIdRef.current, profile: profileRef.current, settings: { ...settings, timeLimit: 0 } });
+  }, [send]);
+
   const join = useCallback((code: string) => send(joinPayload(code)), [joinPayload, send]);
 
   const leave = useCallback(() => {
@@ -176,7 +180,7 @@ export function useGameConnection() {
 
   return {
     room, self, connected, profile, name, error, toast, serverOffset,
-    setName, create, solo, join, leave, send, buyLocal,
+    setName, create, solo, createWalk, join, leave, send, buyLocal,
     clearError: () => setError(null),
     actions: {
       settings: (settings: GameSettings) => send({ type: 'settings', settings }),
@@ -187,6 +191,7 @@ export function useGameConnection() {
       nextRound: () => send({ type: 'nextRound' }),
       restart: () => send({ type: 'restart' }),
       view: (view: PlayerView) => send({ type: 'view', view }),
+      walkLocation: (locationId: string, panoId?: string | null, heading?: number) => send({ type: 'walkLocation', locationId, panoId, heading }),
       mapCursor: (cursor: LatLng | null) => send({ type: 'mapCursor', cursor }),
       useItem: (item: ItemId, targetId?: string) => send({ type: 'useItem', item, targetId }),
       buyItem: (item: ItemId) => send({ type: 'buyItem', item }),

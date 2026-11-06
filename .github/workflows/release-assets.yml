@@ -47,19 +47,34 @@ jobs:
         run: |
           VERSION="${TAG#v}"
           ARCHIVE="geosvoi-${VERSION}-production.tar.gz"
+          ZIP="geosvoi-${VERSION}-production.zip"
+          STAGING=".release/geosvoi-${VERSION}"
           echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
-          tar -czf "$ARCHIVE" \
-            --transform="s,^,geosvoi-${VERSION}/," \
-            dist server shared package.json package-lock.json .env.example \
-            README.md CHANGELOG.md THIRD_PARTY_NOTICES.md docs
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+          mkdir -p "$STAGING"
+          cp -r dist server shared package.json package-lock.json .env.example \
+            README.md CHANGELOG.md THIRD_PARTY_NOTICES.md docs "$STAGING/"
+          tar -czf "$ARCHIVE" -C .release "geosvoi-${VERSION}"
+          (cd .release && zip -qr "../$ZIP" "geosvoi-${VERSION}")
           sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+          sha256sum "$ZIP" > "$ZIP.sha256"
       - name: Upload production archive
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.tag || github.event.client_payload.tag }}
         run: gh release upload "$TAG" "$ARCHIVE" --clobber
-      - name: Upload SHA-256
+      - name: Upload production ZIP
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
+        run: gh release upload "$TAG" "$ZIP" --clobber
+      - name: Upload TAR.GZ SHA-256
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.tag || github.event.client_payload.tag }}
         run: gh release upload "$TAG" "$ARCHIVE.sha256" --clobber
+      - name: Upload ZIP SHA-256
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
+        run: gh release upload "$TAG" "$ZIP.sha256" --clobber

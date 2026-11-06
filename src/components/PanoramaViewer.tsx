@@ -76,12 +76,13 @@ function GoogleStreetView({ location, speedActive, onView, onLocalView, onError 
       const maps = window.google.maps;
       const service = new maps.StreetViewService();
       panoramaTimeout = setTimeout(() => fail('Google Street View не ответил вовремя. Показываем резервную сцену.'), 12_000);
-      service.getPanorama({
+      const request = location.panoId ? { pano: location.panoId } : {
         location: { lat: location.lat, lng: location.lng },
         radius: 250,
         preference: maps.StreetViewPreference.NEAREST,
         source: maps.StreetViewSource.OUTDOOR,
-      }, (data: any, status: string) => {
+      };
+      service.getPanorama(request, (data: any, status: string) => {
         if (panoramaTimeout) clearTimeout(panoramaTimeout);
         if (!alive || !elementRef.current) return;
         if (status !== maps.StreetViewStatus.OK || !data?.location?.pano) {
@@ -110,6 +111,7 @@ function GoogleStreetView({ location, speedActive, onView, onLocalView, onError 
             heading: ((pov.heading % 360) + 360) % 360,
             pitch: pov.pitch || 0,
             panoId: panorama.getPano(),
+            locationId: location.id,
           };
           callbacks.current.onLocalView(view);
           if (Date.now() - lastSent.current > 130) {
@@ -139,7 +141,7 @@ function GoogleStreetView({ location, speedActive, onView, onLocalView, onError 
       panoramaRef.current = null;
       elementRef.current?.replaceChildren();
     };
-  }, [location.lat, location.lng, location.heading, location.provider]);
+  }, [location.id, location.lat, location.lng, location.heading, location.provider, location.panoId]);
 
   return (
     <div className="google-street-view">
@@ -169,7 +171,7 @@ function ThreePanorama({ location, optics, speedActive, onView, onLocalView }: {
   const publish = () => {
     const engine = engineRef.current;
     if (!engine) return;
-    const view = { heading: ((engine.lon % 360) + 360) % 360, pitch: engine.lat };
+    const view = { heading: ((engine.lon % 360) + 360) % 360, pitch: engine.lat, panoId: null, locationId: location.id };
     callbacks.current.onLocalView(view);
     if (Date.now() - lastSent.current > 120) {
       callbacks.current.onView(view);
@@ -316,23 +318,24 @@ function ThreePanorama({ location, optics, speedActive, onView, onLocalView }: {
 }
 
 export default function PanoramaViewer({ location, players, selfId, optics, speedActive, onView }: ViewerProps) {
-  const [localView, setLocalView] = useState<PlayerView>({ heading: location.heading, pitch: 0 });
+  const [localView, setLocalView] = useState<PlayerView>({ heading: location.heading, pitch: 0, panoId: location.panoId ?? null, locationId: location.id });
   const [googleFailed, setGoogleFailed] = useState(false);
   const [fallbackReason, setFallbackReason] = useState<string | null>(null);
   const [autoRotate, setAutoRotate] = useState(false);
   const useGoogle = Boolean(GOOGLE_KEY) && !googleFailed;
 
   useEffect(() => {
-    setLocalView({ heading: location.heading, pitch: 0 });
+    setLocalView({ heading: location.heading, pitch: 0, panoId: location.panoId ?? null, locationId: location.id });
     setGoogleFailed(false);
     setFallbackReason(null);
     setAutoRotate(false);
-  }, [location.id, location.heading, location.provider]);
+  }, [location.id, location.heading, location.provider, location.panoId]);
 
   const friends = players.filter((player) => {
     if (player.id === selfId || (!player.connected && !player.isBot)) return false;
-    if (!useGoogle || player.isBot) return true;
-    return Boolean(player.view.panoId && localView.panoId && player.view.panoId === localView.panoId);
+    if (useGoogle && !player.isBot && player.view.panoId && localView.panoId) return player.view.panoId === localView.panoId;
+    if (player.view.locationId && localView.locationId) return player.view.locationId === localView.locationId;
+    return !useGoogle || player.isBot;
   });
   const visibleFriends = friends.map((player) => {
     const delta = ((player.view.heading - localView.heading + 540) % 360) - 180;
