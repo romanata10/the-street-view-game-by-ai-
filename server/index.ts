@@ -4,13 +4,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, WebSocket } from 'ws';
 import {
-  CITIES, DEFAULT_PROFILE, LOCATIONS, SHOP_ITEMS, calculateScore, distanceKm, getCity, getCityLocations, getLocation,
+  CITIES, DEFAULT_PROFILE, LOCATIONS, SHOP_ITEMS, calculateScore, distanceKm, getCity, getCityLocations, getLocation, getWalkProvider,
   type BattleMode, type GameSettings, type Inventory, type ItemId, type PanoramaMode,
   type PlayerProfile,
 } from '../shared/data';
 import type {
-  ChatMessage, ClientMessage, LatLng, PublicLocation, PublicPlayer, PublicRoom,
+  ChatMessage, ClientMessage, LatLng, PlayerView, PublicLocation, PublicPlayer, PublicRoom,
 } from '../shared/types';
+import { viewsSharePlace } from '../shared/presence';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -34,6 +35,7 @@ if (isProduction) {
 type Socket = WebSocket & { playerId?: string; roomCode?: string };
 interface Room {
   code: string;
+  mode: PublicRoom['mode'];
   status: PublicRoom['status'];
   settings: GameSettings;
   players: Map<string, PublicPlayer>;
@@ -95,7 +97,8 @@ function createPlayer(id: string, name: string, profile: PlayerProfile, index: n
     id, name: name.trim().slice(0, 18) || 'Географ', color: COLORS[index % COLORS.length],
     avatar: isBot ? '🤖' : AVATARS[index % AVATARS.length], isHost: false, isBot, connected: true,
     ready: isBot, score: 0, roundWins: 0, coins: normalized.coins, coinsEarned: 0,
-    inventory: normalized.inventory, view: { heading: 0, pitch: 0 }, mapCursor: null,
+    inventory: normalized.inventory, view: { heading: 0, pitch: 0, panoId: null, locationId: null },
+    walkPanoId: null, walkHeading: null, mapCursor: null,
     guess: null, distance: null, roundScore: 0, guessedAt: null,
     effects: { blackoutUntil: 0, speedUntil: 0, shieldActive: false, doubleActive: false },
     hint: null, reaction: null,
@@ -104,7 +107,7 @@ function createPlayer(id: string, name: string, profile: PlayerProfile, index: n
 
 function publicRoom(room: Room): PublicRoom {
   return {
-    code: room.code, status: room.status, settings: room.settings,
+    code: room.code, mode: room.mode, status: room.status, settings: room.settings,
     players: [...room.players.values()].map((player) => ({ ...player, inventory: { ...player.inventory }, effects: { ...player.effects } })),
     hostId: room.hostId, round: room.round, currentLocation: room.currentLocation,
     roundStartedAt: room.roundStartedAt, roundEndsAt: room.roundEndsAt,
@@ -132,6 +135,16 @@ function notify(room: Room, playerId: string, text: string, kind: 'info' | 'succ
   send(socket, { type: 'toast', text, kind });
 }
 
+function notifyPresenceChanges(room: Room, player: PublicPlayer, previousView: PlayerView) {
+  room.players.forEach((other) => {
+    if (other.id === player.id || (!other.connected && !other.isBot)) return;
+    if (!viewsSharePlace(previousView, other.view) && viewsSharePlace(player.view, other.view)) {
+      notify(room, player.id, `${other.name} теперь рядом с тобой`, 'success');
+      notify(room, other.id, `${player.name} теперь рядом с тобой`, 'success');
+    }
+  });
+}
+
 function error(socket: Socket, text: string) {
   send(socket, { type: 'error', text });
 }
@@ -144,10 +157,10 @@ function detach(socket: Socket) {
   return room;
 }
 
-function createRoom(settings: GameSettings): Room {
+function createRoom(settings: GameSettings, mode: PublicRoom['mode'] = 'match'): Room {
   const code = roomCode();
   const room: Room = {
-    code, status: 'lobby', settings: normalizeSettings(settings), players: new Map(), hostId: '',
+    code, mode, status: 'lobby', settings: normalizeSettings(settings), players: new Map(), hostId: '',
     round: 0, currentLocation: null, roundStartedAt: null, roundEndsAt: null,
     messages: [], createdAt: Date.now(), botTimers: [], locationHistory: [],
   };
@@ -198,13 +211,39 @@ function beginRound(room: Room) {
     player.hint = null;
     player.mapCursor = null;
     player.effects = { blackoutUntil: 0, speedUntil: 0, shieldActive: false, doubleActive: false };
-    player.view = { heading: (room.currentLocation!.heading + index * 35) % 360, pitch: 0 };
+    player.view = { heading: (room.currentLocation!.heading + index * 35) % 360, pitch: 0, panoId: null, locationId: room.currentLocation!.id };
+    player.walkPanoId = null;
+    player.walkHeading = null;
   });
   broadcast(room);
   scheduleBots(room);
 }
 
+function startWalk(room: Room) {
+  const choices = getCityLocations(room.settings.cityIds);
+  const spawn = choices[Math.floor(Math.random() * choices.length)] ?? LOCATIONS[0];
+  room.currentLocation = {
+    id: spawn.id, name: spawn.name, cityId: spawn.cityId, lat: spawn.lat, lng: spawn.lng,
+    image: spawn.image, heading: spawn.heading, provider: getWalkProvider(room.settings.panoramaMode, spawn.id),
+  };
+  room.round = 1;
+  room.status = 'playing';
+  room.roundStartedAt = Date.now();
+  room.roundEndsAt = null;
+  [...room.players.values()].forEach((player, index) => {
+    const heading = (spawn.heading + index * 25) % 360;
+    player.guess = null;
+    player.distance = null;
+    player.roundScore = 0;
+    player.view = { heading, pitch: 0, panoId: null, locationId: spawn.id };
+    player.walkPanoId = null;
+    player.walkHeading = heading;
+  });
+  broadcast(room);
+}
+
 function startMatch(room: Room) {
+  if (room.mode === 'walk') return startWalk(room);
   room.round = 1;
   room.locationHistory = [];
   room.players.forEach((player) => {
@@ -213,6 +252,27 @@ function startMatch(room: Room) {
     player.ready = player.isBot || player.isHost;
   });
   beginRound(room);
+}
+
+function walkToLocation(socket: Socket, room: Room, player: PublicPlayer, locationId: string, panoId?: string | null, heading?: number) {
+  if (room.mode !== 'walk' || room.status !== 'playing') return;
+  const spawn = LOCATIONS.find((location) => location.id === locationId);
+  if (!spawn) return error(socket, 'Это место недоступно для прогулки');
+  const previousView = { ...player.view };
+  const numericHeading = Number(heading);
+  const nextHeading = Number.isFinite(numericHeading) ? ((numericHeading % 360) + 360) % 360 : spawn.heading;
+  const requestedPano = typeof panoId === 'string' && panoId.trim() ? panoId.trim().slice(0, 180) : null;
+  player.walkPanoId = requestedPano;
+  player.walkHeading = nextHeading;
+  player.view = { heading: nextHeading, pitch: 0, panoId: requestedPano, locationId: spawn.id };
+  if (player.isHost) {
+    room.currentLocation = {
+      id: spawn.id, name: spawn.name, cityId: spawn.cityId, lat: spawn.lat, lng: spawn.lng,
+      image: spawn.image, heading: nextHeading, provider: getWalkProvider(room.settings.panoramaMode, spawn.id), panoId: requestedPano,
+    };
+  }
+  broadcast(room);
+  notifyPresenceChanges(room, player, previousView);
 }
 
 function scheduleBots(room: Room) {
@@ -238,7 +298,7 @@ function scheduleBots(room: Room) {
 }
 
 function submitGuess(room: Room, player: PublicPlayer, guess: LatLng) {
-  if (room.status !== 'playing' || player.guess || !room.currentLocation) return;
+  if (room.mode !== 'match' || room.status !== 'playing' || player.guess || !room.currentLocation) return;
   if (!Number.isFinite(guess.lat) || !Number.isFinite(guess.lng)) return;
   player.guess = { lat: clamp(guess.lat, -85, 85), lng: clamp(guess.lng, -180, 180) };
   player.guessedAt = Date.now();
@@ -309,6 +369,7 @@ function removePlayer(socket: Socket, notifyLeft = true) {
 }
 
 function useItem(socket: Socket, room: Room, player: PublicPlayer, item: ItemId, targetId?: string) {
+  if (room.mode !== 'match') return error(socket, 'В свободной прогулке гаджеты не нужны');
   if (room.status !== 'playing') return error(socket, 'Предметы доступны только во время раунда');
   if (!SHOP_ITEMS.some((candidate) => candidate.id === item)) return error(socket, 'Неизвестный предмет');
   if (item === 'optics') return error(socket, 'Оптика работает автоматически');
@@ -354,7 +415,7 @@ wss.on('connection', (rawSocket: Socket) => {
     let message: ClientMessage;
     try { message = JSON.parse(raw.toString()); } catch { return; }
     try {
-      if (message.type === 'create' || message.type === 'join' || message.type === 'solo') {
+      if (message.type === 'create' || message.type === 'createWalk' || message.type === 'join' || message.type === 'solo') {
         removePlayer(socket, false);
         const profile = normalizeProfile(message.profile);
         if (message.type === 'join') {
@@ -366,9 +427,22 @@ wss.on('connection', (rawSocket: Socket) => {
             existing.connected = true;
             existing.name = message.name.trim().slice(0, 18) || existing.name;
           } else {
-            if (room.status !== 'lobby') return error(socket, 'Этот матч уже начался. Попроси друзей создать новый.');
+            const activeWalk = room.mode === 'walk' && room.status === 'playing';
+            if (room.status !== 'lobby' && !activeWalk) return error(socket, 'Этот матч уже начался. Попроси друзей создать новый.');
             if (room.players.size >= 8) return error(socket, 'В комнате уже 8 игроков.');
             const player = createPlayer(message.playerId || randomId(), message.name, profile, room.players.size);
+            if (activeWalk) {
+              const host = room.players.get(room.hostId);
+              const start = LOCATIONS.find((location) => location.id === host?.view.locationId)
+                ?? LOCATIONS.find((location) => location.id === room.currentLocation?.id)
+                ?? LOCATIONS[0];
+              const heading = host?.view.heading ?? start.heading;
+              const panoId = host?.view.panoId ?? null;
+              player.ready = true;
+              player.view = { heading, pitch: 0, panoId, locationId: start.id };
+              player.walkPanoId = panoId;
+              player.walkHeading = heading;
+            }
             room.players.set(player.id, player);
           }
           socket.roomCode = code;
@@ -377,7 +451,7 @@ wss.on('connection', (rawSocket: Socket) => {
           send(socket, { type: 'joined', playerId: message.playerId });
           return;
         }
-        const room = createRoom(message.settings);
+        const room = createRoom(message.settings, message.type === 'createWalk' ? 'walk' : 'match');
         const id = message.playerId || randomId();
         const player = createPlayer(id, message.name, profile, 0);
         player.isHost = true;
@@ -413,7 +487,7 @@ wss.on('connection', (rawSocket: Socket) => {
           broadcast(room);
           break;
         case 'addBot':
-          if (room.hostId !== player.id || room.status !== 'lobby') return;
+          if (room.mode !== 'match' || room.hostId !== player.id || room.status !== 'lobby') return;
           addBot(room);
           broadcast(room);
           break;
@@ -439,17 +513,35 @@ wss.on('connection', (rawSocket: Socket) => {
           if (room.hostId !== player.id || room.status !== 'finished') return;
           startMatch(room);
           break;
-        case 'view':
+        case 'view': {
           if (room.status !== 'playing') return;
+          const previousView = { ...player.view };
+          const candidateLocation = typeof message.view.locationId === 'string' ? message.view.locationId : null;
+          const walkLocationId = player.view.locationId ?? room.currentLocation?.id ?? null;
+          // In free walk the place changes only through walkLocation. A viewer that is still
+          // mounted for the previous place sends a late view and must not drag the player back.
+          if (room.mode === 'walk' && candidateLocation && walkLocationId && candidateLocation !== walkLocationId) return;
+          const locationId = room.mode === 'walk'
+            ? walkLocationId
+            : candidateLocation && LOCATIONS.some((location) => location.id === candidateLocation)
+              ? candidateLocation
+              : walkLocationId;
+          const heading = Number(message.view.heading);
           player.view = {
-            heading: ((Number(message.view.heading) % 360) + 360) % 360,
+            heading: Number.isFinite(heading) ? ((heading % 360) + 360) % 360 : player.view.heading,
             pitch: clamp(Number(message.view.pitch) || 0, -80, 80),
             panoId: typeof message.view.panoId === 'string' ? message.view.panoId.slice(0, 180) : null,
+            locationId,
           };
           broadcast(room);
+          notifyPresenceChanges(room, player, previousView);
+          break;
+        }
+        case 'walkLocation':
+          walkToLocation(socket, room, player, message.locationId, message.panoId, message.heading);
           break;
         case 'mapCursor':
-          if (room.status !== 'playing') return;
+          if (room.mode !== 'match' || room.status !== 'playing') return;
           player.mapCursor = message.cursor && Number.isFinite(message.cursor.lat) && Number.isFinite(message.cursor.lng)
             ? { lat: clamp(message.cursor.lat, -85, 85), lng: clamp(message.cursor.lng, -180, 180) }
             : null;

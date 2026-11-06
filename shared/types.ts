@@ -1,6 +1,7 @@
 import type { GameSettings, Inventory, ItemId, PanoramaMode } from './data';
 
 export type RoomStatus = 'lobby' | 'playing' | 'roundResult' | 'finished';
+export type RoomMode = 'match' | 'walk';
 export interface LatLng { lat: number; lng: number }
 
 export interface PlayerView {
@@ -8,6 +9,8 @@ export interface PlayerView {
   pitch: number;
   /** Google Street View panorama ID; used to show teammates only in the same scene. */
   panoId?: string | null;
+  /** Built-in location selected by the player, including independent free-walk locations. */
+  locationId?: string | null;
 }
 
 export interface PlayerEffects {
@@ -32,6 +35,9 @@ export interface PublicPlayer {
   coinsEarned: number;
   inventory: Inventory;
   view: PlayerView;
+  /** Requested Google panorama and initial heading for the current free-walk stop. */
+  walkPanoId?: string | null;
+  walkHeading?: number | null;
   mapCursor: LatLng | null;
   guess: LatLng | null;
   distance: number | null;
@@ -51,6 +57,8 @@ export interface PublicLocation {
   image: string;
   heading: number;
   provider: Exclude<PanoramaMode, 'mixed'>;
+  /** Optional exact Google panorama used by favorites and the “go to friend” action. */
+  panoId?: string | null;
 }
 
 export interface ChatMessage {
@@ -64,6 +72,7 @@ export interface ChatMessage {
 
 export interface PublicRoom {
   code: string;
+  mode: RoomMode;
   status: RoomStatus;
   settings: GameSettings;
   players: PublicPlayer[];
@@ -78,6 +87,7 @@ export interface PublicRoom {
 
 export type ClientMessage =
   | { type: 'create'; name: string; playerId: string; profile: { coins: number; inventory: Inventory }; settings: GameSettings }
+  | { type: 'createWalk'; name: string; playerId: string; profile: { coins: number; inventory: Inventory }; settings: GameSettings }
   | { type: 'join'; name: string; playerId: string; code: string; profile: { coins: number; inventory: Inventory } }
   | { type: 'solo'; name: string; playerId: string; profile: { coins: number; inventory: Inventory }; settings: GameSettings }
   | { type: 'settings'; settings: GameSettings }
@@ -88,6 +98,7 @@ export type ClientMessage =
   | { type: 'nextRound' }
   | { type: 'restart' }
   | { type: 'view'; view: PlayerView }
+  | { type: 'walkLocation'; locationId: string; panoId?: string | null; heading?: number }
   | { type: 'mapCursor'; cursor: LatLng | null }
   | { type: 'useItem'; item: ItemId; targetId?: string }
   | { type: 'buyItem'; item: ItemId }

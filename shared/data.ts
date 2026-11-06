@@ -160,6 +160,13 @@ export function getCityLocations(cityIds: string[]) {
   return LOCATIONS.filter((location) => cityIds.includes(location.cityId));
 }
 
+/** Stable provider choice for independent free-walk stops and saved favorites. */
+export function getWalkProvider(mode: PanoramaMode, locationId: string): Exclude<PanoramaMode, 'mixed'> {
+  if (mode !== 'mixed') return mode;
+  const hash = [...locationId].reduce((total, letter) => total + letter.charCodeAt(0), 0);
+  return hash % 2 === 0 ? 'street' : 'points';
+}
+
 export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const radius = 6371;
   const toRad = (value: number) => value * Math.PI / 180;

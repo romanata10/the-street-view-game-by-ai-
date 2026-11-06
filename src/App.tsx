@@ -4,6 +4,7 @@ import { useGameConnection } from './hooks/useGameConnection';
 import MainMenu from './components/MainMenu';
 import Lobby from './components/Lobby';
 import Game from './components/Game';
+import WalkGame from './components/WalkGame';
 import { Logo, Toast } from './components/UI';
 
 export default function App() {
@@ -17,7 +18,7 @@ export default function App() {
   return (
     <>
       {room && self ? (
-        room.status === 'lobby' ? <Lobby game={game} /> : <Game game={game} />
+        room.status === 'lobby' ? <Lobby game={game} /> : room.mode === 'walk' ? <WalkGame game={game} /> : <Game game={game} />
       ) : room ? (
         <div className="reconnect-screen"><Logo /><span className="spinner large" /><h1>Возвращаем тебя в комнату</h1><p>Синхронизируем игроков и текущий раунд…</p><button className="secondary-button" onClick={game.leave}>В главное меню</button></div>
       ) : <MainMenu game={game} />}
