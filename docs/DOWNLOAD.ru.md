@@ -4,12 +4,16 @@
 
 ![Центр загрузок внутри игры](images/download.jpg)
 
+Эти же шаги есть в самом приложении: **«Как играть» → «Скачать»**.
+
+![Вкладка «Скачать» в центре обучения](images/tutorial-download.jpg)
+
 ## Ссылки на скачивание
 
 | Что скачать | Для чего | Ссылка |
 |---|---|---|
-| **Production ZIP 1.1.0** | Готовый клиент и сервер: не нужна команда `npm run build` | [Скачать production ZIP](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.0/geosvoi-1.1.0-production.zip) |
-| **Production TAR.GZ 1.1.0** | Тот же набор файлов для Linux и macOS | [Скачать production TAR.GZ](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.0/geosvoi-1.1.0-production.tar.gz) |
+| **Production ZIP 1.1.1** | Готовый клиент и сервер: не нужна команда `npm run build` | [Скачать production ZIP](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.1/geosvoi-1.1.1-production.zip) |
+| **Production TAR.GZ 1.1.1** | Тот же набор файлов для Linux и macOS | [Скачать production TAR.GZ](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.1/geosvoi-1.1.1-production.tar.gz) |
 | **ZIP с исходниками `main`** | Последняя версия, разработка, изменение интерфейса и Google-ключа | [Скачать ZIP исходников](https://github.com/romanata10/the-street-view-game-by-ai-/archive/refs/heads/main.zip) |
 | **Последний стабильный релиз** | Все доступные production ZIP/TAR.GZ, SHA-256 и исходники | [Открыть Releases](https://github.com/romanata10/the-street-view-game-by-ai-/releases/latest) |
 
@@ -30,15 +34,15 @@ Production-архив уже содержит собранный `dist`, поэ�
 - **Linux:** файловый менеджер или команда:
 
 ```bash
-unzip geosvoi-1.1.0-production.zip
-cd geosvoi-1.1.0
+unzip geosvoi-1.1.1-production.zip
+cd geosvoi-1.1.1
 ```
 
 **TAR.GZ:** подойдут 7-Zip, WinRAR, архиватор macOS или команда `tar`:
 
 ```bash
-tar -xzf geosvoi-1.1.0-production.tar.gz
-cd geosvoi-1.1.0
+tar -xzf geosvoi-1.1.1-production.tar.gz
+cd geosvoi-1.1.1
 ```
 
 Внутри должны находиться `package.json`, папки `dist`, `server`, `shared` и `docs`.
@@ -94,15 +98,15 @@ npm run dev
 Linux / macOS:
 
 ```bash
-sha256sum -c geosvoi-1.1.0-production.zip.sha256
-sha256sum -c geosvoi-1.1.0-production.tar.gz.sha256
+sha256sum -c geosvoi-1.1.1-production.zip.sha256
+sha256sum -c geosvoi-1.1.1-production.tar.gz.sha256
 ```
 
 Windows PowerShell:
 
 ```powershell
-(Get-FileHash .\geosvoi-1.1.0-production.zip -Algorithm SHA256).Hash
-(Get-FileHash .\geosvoi-1.1.0-production.tar.gz -Algorithm SHA256).Hash
+(Get-FileHash .\geosvoi-1.1.1-production.zip -Algorithm SHA256).Hash
+(Get-FileHash .\geosvoi-1.1.1-production.tar.gz -Algorithm SHA256).Hash
 ```
 
 Сравните результат со строкой внутри `.sha256`. Регистр букв хеша значения не имеет.

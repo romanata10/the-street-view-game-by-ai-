@@ -237,6 +237,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .gadget-guide b { color: #dbe5d6; font-size: 9px; }
 .gadget-guide p { margin-top: 7px; color: #839083; font-size: 8px; line-height: 1.55; }
 .rules-modal > .primary-button { width: 100%; }
+.rules-modal code { padding: 1px 4px; color: #cde7bb; background: #0e1410; border-radius: 4px; font-size: .95em; white-space: nowrap; }
+.rules-download-cta { width: 100%; margin-bottom: 10px; }
+.menu-rules-link { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 12px auto 0; padding: 6px; color: #9cae9c; background: transparent; font-size: 9px; font-weight: 700; }
+.menu-rules-link:hover { color: var(--lime); }
+.download-steps > div { min-height: 112px; }
 
 .shop-modal { width: min(1040px, 100%); padding: 34px; }
 .shop-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; padding-right: 35px; }
@@ -837,6 +842,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .shop-grid { grid-template-columns: 1fr; }
   .shop-item { min-height: 210px; }
   .rules-list { grid-template-columns: 1fr; }
+  .rules-tabs { overflow-x: auto; }
+  .rules-tabs button { flex: 0 0 auto; padding: 0 10px; white-space: nowrap; }
   .friend-tutorial { grid-template-columns: 1fr; }
   .gadget-guide { grid-template-columns: repeat(2, 1fr); }
   .invite-example { flex-wrap: wrap; gap: 8px 12px; }
