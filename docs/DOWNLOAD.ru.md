@@ -8,28 +8,40 @@
 
 | Что скачать | Для чего | Ссылка |
 |---|---|---|
-| **ZIP с исходниками `main`** | Последняя версия, разработка, самостоятельная сборка | [Скачать ZIP](https://github.com/romanata10/the-street-view-game-by-ai-/archive/refs/heads/main.zip) |
-| **Production TAR.GZ 1.0.0** | Готовый клиент и сервер без команды `npm run build` | [Скачать TAR.GZ](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.0.0/geosvoi-1.0.0-production.tar.gz) |
+| **Production ZIP 1.1.0** | Готовый клиент и сервер: не нужна команда `npm run build` | [Скачать production ZIP](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.0/geosvoi-1.1.0-production.zip) |
+| **Production TAR.GZ 1.1.0** | Тот же набор файлов для Linux и macOS | [Скачать production TAR.GZ](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.0/geosvoi-1.1.0-production.tar.gz) |
+| **ZIP с исходниками `main`** | Последняя версия, разработка, изменение интерфейса и Google-ключа | [Скачать ZIP исходников](https://github.com/romanata10/the-street-view-game-by-ai-/archive/refs/heads/main.zip) |
 | **Последний стабильный релиз** | Все доступные production ZIP/TAR.GZ, SHA-256 и исходники | [Открыть Releases](https://github.com/romanata10/the-street-view-game-by-ai-/releases/latest) |
 
 В приложении эти ссылки также находятся в кнопке **«Скачать»** в верхней панели.
 
-> Production ZIP и TAR.GZ формируются GitHub Actions из одного набора файлов. Для новых релизов workflow прикрепляет оба архива и отдельный `.sha256` для каждого. Специальный RAR не требуется: ZIP открывается встроенными средствами Windows, macOS и Linux.
+> Production ZIP и TAR.GZ формируются GitHub Actions из одного набора файлов. Для каждого релиза workflow прикрепляет оба архива и отдельный `.sha256` для каждого. Специальный RAR не требуется: ZIP открывается встроенными средствами Windows, macOS и Linux.
 
-## Вариант 1. ZIP с исходниками
+## Вариант 1. Готовый production-архив (рекомендуется)
+
+Production-архив уже содержит собранный `dist`, поэтому Vite и TypeScript для запуска не нужны. Достаточно Node.js и установки production-зависимостей.
 
 ### 1. Распакуйте архив
 
-- **Windows:** нажмите правой кнопкой по ZIP → **«Извлечь всё…»**.
-- **macOS:** откройте ZIP двойным кликом.
-- **Linux:** используйте файловый менеджер или команду:
+**ZIP:**
+
+- **Windows:** правой кнопкой по файлу → **«Извлечь всё…»** → **«Извлечь»**.
+- **macOS:** двойной клик по ZIP.
+- **Linux:** файловый менеджер или команда:
 
 ```bash
-unzip main.zip
-cd the-street-view-game-by-ai--main
+unzip geosvoi-1.1.0-production.zip
+cd geosvoi-1.1.0
 ```
 
-GitHub формирует имя папки автоматически, поэтому оно может немного отличаться. Перейдите в папку, внутри которой находятся `package.json`, `src`, `server` и `shared`.
+**TAR.GZ:** подойдут 7-Zip, WinRAR, архиватор macOS или команда `tar`:
+
+```bash
+tar -xzf geosvoi-1.1.0-production.tar.gz
+cd geosvoi-1.1.0
+```
+
+Внутри должны находиться `package.json`, папки `dist`, `server`, `shared` и `docs`.
 
 ### 2. Установите Node.js
 
@@ -37,7 +49,7 @@ GitHub формирует имя папки автоматически, поэт
 
 [Скачать Node.js с официального сайта](https://nodejs.org/en/download).
 
-Проверьте установку:
+Проверьте установку в новом окне терминала:
 
 ```bash
 node --version
@@ -46,11 +58,9 @@ npm --version
 
 ### 3. Установите зависимости и запустите игру
 
-Откройте терминал в папке проекта:
-
 ```bash
-npm ci
-npm run dev
+npm ci --omit=dev
+npm start
 ```
 
 После сообщения `ГЕОСВОИ запущены` откройте:
@@ -59,59 +69,52 @@ npm run dev
 http://localhost:3000
 ```
 
-Остановить сервер можно клавишами **Ctrl + C**. При следующем запуске достаточно команды `npm run dev`; повторно выполнять `npm ci` после каждого закрытия не нужно.
+Остановить сервер можно клавишами **Ctrl + C**. При следующем запуске достаточно команды `npm start`; повторно выполнять `npm ci` после каждого закрытия не нужно.
 
-## Вариант 2. Готовый production-архив
+## Вариант 2. ZIP с исходниками
 
-Production-архив уже содержит собранный `dist`, поэтому Vite и TypeScript для запуска не нужны.
+Этот вариант нужен, если вы хотите менять код, интерфейс или подключить собственный Google API. В архиве есть `src`, но нет готового `dist`: клиент собирается локально.
 
-### ZIP
-
-Распакуйте production ZIP и откройте терминал в папке `geosvoi-ВЕРСИЯ`.
-
-### TAR.GZ
-
-Windows 10/11, macOS и Linux могут распаковать его командой `tar`. Также подойдут 7-Zip и WinRAR:
+1. Распакуйте ZIP так же, как описано выше. GitHub формирует имя папки автоматически, поэтому оно может немного отличаться.
+2. Установите Node.js 20.19+.
+3. Откройте терминал в папке, где находятся `package.json`, `src`, `server` и `shared`.
+4. Установите зависимости и запустите dev-сервер:
 
 ```bash
-tar -xzf geosvoi-1.0.0-production.tar.gz
-cd geosvoi-1.0.0
+npm ci
+npm run dev
 ```
 
-### Запуск обоих форматов
-
-```bash
-npm ci --omit=dev
-npm start
-```
-
-Откройте `http://localhost:3000`. В production-архиве нет исходного `src`; для изменения интерфейса или встраивания нового Google-ключа скачайте ZIP с исходниками.
+После сообщения `ГЕОСВОИ запущены` откройте `http://localhost:3000`. Для production-запуска исходников выполните `npm run build`, затем `npm start`.
 
 ## Проверка SHA-256
 
-Если рядом с архивом есть `.sha256`, скачайте его в ту же папку.
+Рядом с каждым production-архивом лежит файл `.sha256`. Скачайте архив и соответствующий `.sha256` в одну папку.
 
 Linux / macOS:
 
 ```bash
-sha256sum -c geosvoi-1.0.0-production.tar.gz.sha256
+sha256sum -c geosvoi-1.1.0-production.zip.sha256
+sha256sum -c geosvoi-1.1.0-production.tar.gz.sha256
 ```
 
 Windows PowerShell:
 
 ```powershell
-(Get-FileHash .\geosvoi-1.0.0-production.tar.gz -Algorithm SHA256).Hash
+(Get-FileHash .\geosvoi-1.1.0-production.zip -Algorithm SHA256).Hash
+(Get-FileHash .\geosvoi-1.1.0-production.tar.gz -Algorithm SHA256).Hash
 ```
 
 Сравните результат со строкой внутри `.sha256`. Регистр букв хеша значения не имеет.
 
 ## Google Street View
 
-Без ключа доступны все встроенные демонстрационные панорамы, прогулка, избранное и совместное присутствие. Для реальных Google-сцен:
+Без ключа доступны все встроенные демонстрационные панорамы, свободная прогулка, избранное и совместное присутствие. Для реальных Google-сцен:
 
-1. Создайте `.env` по примеру `.env.example`.
-2. Добавьте `VITE_GOOGLE_MAPS_API_KEY=ваш_ключ`.
-3. В исходниках выполните `npm run build`, затем запустите `npm start`.
+1. Возьмите архив с исходниками: в production-сборке нет папки `src`, поэтому ключ нельзя встроить без пересборки.
+2. Создайте `.env` по примеру `.env.example`.
+3. Добавьте `VITE_GOOGLE_MAPS_API_KEY=ваш_ключ`.
+4. Выполните `npm run build`, затем `npm start`.
 
 Полная настройка: [GOOGLE_MAPS.ru.md](GOOGLE_MAPS.ru.md). Не отправляйте ключ в чат и не коммитьте `.env`.
 
@@ -127,6 +130,15 @@ Windows PowerShell:
 
 После этого хост создаёт матч или **«Погулять с другом»**, а гость заходит по ссылке/коду. В свободную прогулку можно войти даже после её начала.
 
+## Обновление до новой версии
+
+1. Скачайте архивы нового релиза и проверьте SHA-256.
+2. Остановите старый сервер (`Ctrl + C`).
+3. Распакуйте новый архив в отдельную папку.
+4. Выполните `npm ci --omit=dev` и `npm start`.
+
+Профиль, монеты и избранное хранятся в `localStorage` браузера, поэтому обновление серверных файлов их не удаляет. Комнаты существуют только в памяти сервера: после перезапуска создайте новую и отправьте другу свежую ссылку.
+
 ## Частые проблемы
 
 ### `npm is not recognized` / `npm: command not found`
@@ -140,7 +152,7 @@ Node.js не установлен или терминал открыт до ус
 ### Порт 3000 уже занят
 
 ```bash
-PORT=8080 npm run dev
+PORT=8080 npm start
 ```
 
 Откройте `http://localhost:8080`.
@@ -152,3 +164,7 @@ PORT=8080 npm run dev
 ### Архив не открывается
 
 Скачайте его ещё раз и проверьте SHA-256. Для TAR.GZ используйте 7-Zip/WinRAR либо выберите ZIP из последнего релиза. Не переименовывайте расширение архива вручную.
+
+### После распаковки нет папки `src`
+
+Это production-архив. Для изменения кода скачайте ZIP с исходниками. Для обычной игры отсутствие `src` не мешает.
