@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [1.1.1] — 2026-11-06
+
+### Добавлено
+
+- Вкладка «Скачать» в центре обучения: четыре шага установки production ZIP и переход в центр загрузок.
+- Ссылка «Как играть и установить» на главной странице: обучение доступно и на телефоне, где верхнее меню скрыто.
+
+### Изменено
+
+- Обновлены скриншоты обучения, README и инструкция DOWNLOAD под версию 1.1.1.
+
 ## [1.1.0] — 2026-11-06
 
 ### Добавлено
@@ -49,5 +60,6 @@
 - GitHub Actions: контент, TypeScript, сборка, запуск сервера и Docker healthcheck.
 - Проверка контента через `npm run test:content`.
 
+[1.1.1]: https://github.com/romanata10/the-street-view-game-by-ai-/releases/tag/v1.1.1
 [1.1.0]: https://github.com/romanata10/the-street-view-game-by-ai-/releases/tag/v1.1.0
 [1.0.0]: https://github.com/romanata10/the-street-view-game-by-ai-/releases/tag/v1.0.0

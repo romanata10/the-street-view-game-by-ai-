@@ -20,6 +20,7 @@
 - **Очки и магазин:** подсказки, чёрный экран сопернику, ускорение, щит, удвоение очков и постоянная Оптика PRO.
 - **Результаты:** расстояния, правильная точка, ответы всех игроков, монеты и финальный подиум.
 - **Без регистрации:** профиль и рюкзак сохраняются в браузере.
+- **Обучение в игре:** вкладки «Основы», «С друзьями», «Прогулка», «Гаджеты» и «Скачать» с пошаговой установкой.
 - **Русский адаптивный интерфейс:** компьютер, планшет или телефон.
 
 ## Как играть вместе с другом
@@ -39,8 +40,8 @@
 
 В меню игры нажмите **«Скачать»**: там показаны архивы и пошаговая установка.
 
-- [Production ZIP 1.1.0](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.0/geosvoi-1.1.0-production.zip) — готовый клиент и сервер, команда `npm run build` не нужна.
-- [Production TAR.GZ 1.1.0](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.0/geosvoi-1.1.0-production.tar.gz) — тот же набор файлов для Linux и macOS.
+- [Production ZIP 1.1.1](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.1/geosvoi-1.1.1-production.zip) — готовый клиент и сервер, команда `npm run build` не нужна.
+- [Production TAR.GZ 1.1.1](https://github.com/romanata10/the-street-view-game-by-ai-/releases/download/v1.1.1/geosvoi-1.1.1-production.tar.gz) — тот же набор файлов для Linux и macOS.
 - [ZIP с последними исходниками](https://github.com/romanata10/the-street-view-game-by-ai-/archive/refs/heads/main.zip) — для разработки и своей сборки.
 - [Последний релиз](https://github.com/romanata10/the-street-view-game-by-ai-/releases/latest) — все архивы и SHA-256.
 - [Полная инструкция по скачиванию](docs/DOWNLOAD.ru.md) — установка, запуск, подключение друга и решение ошибок.

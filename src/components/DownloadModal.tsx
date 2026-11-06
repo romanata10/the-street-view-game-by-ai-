@@ -2,7 +2,7 @@ import { ArrowUpRight, Check, Download, ExternalLink, FileArchive, FolderOpen, G
 import { Modal } from './UI';
 
 const REPOSITORY = 'https://github.com/romanata10/the-street-view-game-by-ai-';
-const VERSION = '1.1.0';
+const VERSION = '1.1.1';
 const SOURCE_ZIP = `${REPOSITORY}/archive/refs/heads/main.zip`;
 const PRODUCTION_ZIP = `${REPOSITORY}/releases/download/v${VERSION}/geosvoi-${VERSION}-production.zip`;
 const PRODUCTION_TAR = `${REPOSITORY}/releases/download/v${VERSION}/geosvoi-${VERSION}-production.tar.gz`;

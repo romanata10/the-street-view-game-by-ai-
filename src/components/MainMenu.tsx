@@ -33,7 +33,7 @@ export default function MainMenu({ game }: { game: GameConnection }) {
   const [joinOpen, setJoinOpen] = useState(false);
   const [nameOpen, setNameOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [rulesTab, setRulesTab] = useState<'game' | 'friends' | 'walk' | 'gadgets'>('game');
+  const [rulesTab, setRulesTab] = useState<'game' | 'friends' | 'walk' | 'gadgets' | 'download'>('game');
   const [joinCode, setJoinCode] = useState(() => new URLSearchParams(location.search).get('room')?.toUpperCase() || '');
   const [draftName, setDraftName] = useState(game.name);
   const citiesRef = useRef<HTMLElement>(null);
@@ -163,6 +163,7 @@ export default function MainMenu({ game }: { game: GameConnection }) {
               <span><b>Погулять с другом</b><small>Любые места вместе · без таймера и очков</small></span>
               <ArrowRight size={18} />
             </button>
+            <button className="menu-rules-link" onClick={() => setRulesOpen(true)}><CircleHelp size={15} /> Как играть и установить</button>
           </aside>
         </section>
 
@@ -222,12 +223,13 @@ export default function MainMenu({ game }: { game: GameConnection }) {
       {rulesOpen && (
         <Modal onClose={() => setRulesOpen(false)} className="rules-modal" label="Обучение игре">
           <span className="eyebrow"><CircleHelp size={14} /> ЦЕНТР ОБУЧЕНИЯ</span>
-          <h2>{rulesTab === 'game' ? 'Три шага до победы' : rulesTab === 'friends' ? 'Как играть с другом' : rulesTab === 'walk' ? 'Свободная прогулка' : 'Гаджеты и управление'}</h2>
+          <h2>{rulesTab === 'game' ? 'Три шага до победы' : rulesTab === 'friends' ? 'Как играть с другом' : rulesTab === 'walk' ? 'Свободная прогулка' : rulesTab === 'download' ? 'Как установить игру' : 'Гаджеты и управление'}</h2>
           <div className="rules-tabs" role="tablist">
             <button className={rulesTab === 'game' ? 'active' : ''} onClick={() => setRulesTab('game')}><Navigation size={14} /> Основы</button>
             <button className={rulesTab === 'friends' ? 'active' : ''} onClick={() => setRulesTab('friends')}><Users size={14} /> С друзьями</button>
             <button className={rulesTab === 'walk' ? 'active' : ''} onClick={() => setRulesTab('walk')}><Footprints size={14} /> Прогулка</button>
             <button className={rulesTab === 'gadgets' ? 'active' : ''} onClick={() => setRulesTab('gadgets')}><WandSparkles size={14} /> Гаджеты</button>
+            <button className={rulesTab === 'download' ? 'active' : ''} onClick={() => setRulesTab('download')}><Download size={14} /> Скачать</button>
           </div>
           {rulesTab === 'game' && <>
             <div className="rules-list">
@@ -255,6 +257,16 @@ export default function MainMenu({ game }: { game: GameConnection }) {
               <div><span>4</span><section><b>Сохраняй панорамы</b><p>Звезда добавляет место в избранное. В Google сохраняются точный panoId и направление взгляда, чтобы вернуться позже.</p></section><Sparkles size={21} /></div>
             </div>
             <div className="rules-tip"><Footprints size={19} /><span><b>Друг может подключиться после старта.</b> Он появится рядом с текущим местом хоста. Избранное хранится локально в твоём браузере.</span></div>
+          </>}
+          {rulesTab === 'download' && <>
+            <div className="friend-tutorial download-steps">
+              <div><span>1</span><section><b>Скачай production ZIP</b><p>Кнопка «Скачать» в шапке открывает центр загрузок. Внутри архива — уже собранный клиент, сервер и документация.</p></section><Download size={21} /></div>
+              <div><span>2</span><section><b>Установи Node.js</b><p>Нужен Node.js 20.19 или новее, рекомендуется 22 LTS. Проверь версию командой <code>node --version</code>.</p></section><Globe2 size={21} /></div>
+              <div><span>3</span><section><b>Распакуй и запусти</b><p>Открой терминал в папке архива и выполни <code>npm ci --omit=dev</code>, затем <code>npm start</code>.</p></section><Play size={21} /></div>
+              <div><span>4</span><section><b>Открой игру</b><p>Перейди на <code>http://localhost:3000</code>. Для игры с другом нужен общий адрес сервера, а не localhost на разных устройствах.</p></section><Check size={21} /></div>
+            </div>
+            <div className="rules-tip"><Download size={19} /><span><b>RAR не нужен.</b> ZIP открывается стандартными средствами Windows, macOS и Linux. ZIP исходников нужен только для разработки: <code>npm ci</code> и <code>npm run dev</code>.</span></div>
+            <button type="button" className="secondary-button rules-download-cta" onClick={() => { setRulesOpen(false); setDownloadOpen(true); }}>Открыть центр загрузок <ArrowRight size={16} /></button>
           </>}
           {rulesTab === 'gadgets' && <>
             <div className="gadget-guide">
